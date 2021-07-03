@@ -29,6 +29,7 @@ set(SRC
     
 add_executable(hypertextcpp ${SRC})
 target_include_directories(hypertextcpp PRIVATE lib/cmdlime/include)
+target_include_directories(hypertextcpp PRIVATE lib/gsl/include)
 target_link_libraries(hypertextcpp stdc++fs)
 
 option(ENABLE_TESTS "Enable tests" OFF)

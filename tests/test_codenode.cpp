@@ -20,14 +20,14 @@ void test(const std::string& input, const std::string& expected)
 template <typename TNode>
 void testError(const std::string& input, const std::string& expectedErrorMsg)
 {
-    assert_exception<htcpp::ParsingError>(
+    assert_exception<htcpp::TemplateError>(
         [input]{
             auto stream = std::istringstream{input};
             auto token = TNode{};
             auto streamReader = htcpp::StreamReader{stream};
             token.load(streamReader);
         },
-        [expectedErrorMsg](const htcpp::ParsingError& e){
+        [expectedErrorMsg](const htcpp::TemplateError& e){
             EXPECT_EQ(e.what(), expectedErrorMsg);
         });
 }
@@ -50,28 +50,28 @@ TEST(RenderedExpressionNode, WithStringOutput)
 
 TEST(RenderingCodeNode, Basic)
 {
-    test<htcpp::RenderCodeNode>
+    test<htcpp::RenderStatementNode>
             ("${ auto a = 0; {/*local scope*/} }",
              "${ auto a = 0; {/*local scope*/} }");
 }
 
 TEST(RenderingCodeNode, BasicWithString)
 {
-    test<htcpp::RenderCodeNode>
+    test<htcpp::RenderStatementNode>
             ("${ auto a = 0; {auto str = `Hello {}`;} }",
              "${ auto a = 0; {auto str = `Hello {}`;} }");
 }
 
 TEST(GlobalCodeNode, Basic)
 {
-    test<htcpp::GlobalCodeNode>
+    test<htcpp::GlobalStatementNode>
             ("#{ auto a = 0; {/*local scope*/} }",
              "#{ auto a = 0; {/*local scope*/} }");
 }
 
 TEST(GlobalCodeNode, BasicWithString)
 {
-    test<htcpp::GlobalCodeNode>
+    test<htcpp::GlobalStatementNode>
             ("#{ auto a = 0; {auto str = `Hello {}`;} }",
              "#{ auto a = 0; {auto str = `Hello {}`;} }");
 }

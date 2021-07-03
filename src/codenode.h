@@ -5,7 +5,8 @@ namespace htcpp{
 
 class CodeNode : public IDocumentNode{
 public:
-    CodeNode(char idToken,
+    CodeNode(const std::string& name,
+             char idToken,
              char openToken,
              char closeToken,
              bool isGlobalScoped);
@@ -18,6 +19,7 @@ protected:
     std::string content_;
 
 private:
+    std::string name_;
     char idToken_;
     char openToken_;
     char closeToken_;
@@ -28,24 +30,24 @@ class ExpressionNode : public CodeNode
 {
 public:
     ExpressionNode() :
-        CodeNode('$', '(', ')', false)
+        CodeNode("Expression ", '$', '(', ')', false)
     {}
     std::string docRenderingCode() override;
 };
 
-class RenderCodeNode : public CodeNode
+class RenderStatementNode : public CodeNode
 {
 public:
-    RenderCodeNode() :
-        CodeNode('$', '{', '}', false)
+    RenderStatementNode() :
+        CodeNode("Render statement", '$', '{', '}', false)
     {}
 };
 
-class GlobalCodeNode : public CodeNode
+class GlobalStatementNode : public CodeNode
 {
 public:
-    GlobalCodeNode() :
-        CodeNode('#', '{', '}', true)
+    GlobalStatementNode() :
+        CodeNode("Global statement", '#', '{', '}', true)
     {}
 };
 

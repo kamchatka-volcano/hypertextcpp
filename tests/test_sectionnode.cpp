@@ -19,14 +19,14 @@ void test(const std::string& input, const std::string& expected)
 
 void testError(const std::string& input, const std::string& expectedErrorMsg)
 {
-    assert_exception<htcpp::ParsingError>(
+    assert_exception<htcpp::TemplateError>(
         [input]{
             auto stream = std::istringstream{input};
             auto token = htcpp::SectionNode{};
             auto streamReader = htcpp::StreamReader{stream};
             token.load(streamReader);
         },
-        [expectedErrorMsg](const htcpp::ParsingError& e){
+        [expectedErrorMsg](const htcpp::TemplateError& e){
             EXPECT_EQ(e.what(), expectedErrorMsg);
         });
 }

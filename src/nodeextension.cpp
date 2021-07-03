@@ -1,14 +1,27 @@
 #include "nodeextension.h"
 #include "streamreader.h"
 #include "errors.h"
+#include "utils.h"
 
 namespace htcpp{
 
+namespace{
+std::string nodeExtensionName(NodeExtension::Type type)
+{
+    switch(type){
+    case NodeExtension::Type::Conditional : return "Conditional extension";
+    case NodeExtension::Type::Loop: return "Loop extension";
+    default: return {};
+    }
+}
+}
+
 NodeExtension::NodeExtension() = default;
-NodeExtension::NodeExtension(NodeExtension::Type type, const std::string& content)
+NodeExtension::NodeExtension(NodeExtension::Type type,
+                             const std::string& content)
     : type_(type)
     , content_(content)
-{
+{    
 }
 
 bool NodeExtension::isEmpty() const
@@ -37,7 +50,8 @@ std::string NodeExtension::docTemplate() const
 
 NodeExtension readNodeExtension(StreamReader& stream)
 {
-    auto nextChars = stream.peek(2);
+    const auto nodePos =  stream.positionInfo();
+    const auto nextChars = stream.peek(2);
     auto extensionType = NodeExtension::Type::None;
     if (nextChars.empty())
         return {};
@@ -58,12 +72,15 @@ NodeExtension readNodeExtension(StreamReader& stream)
             openParenthesisNum++;
         else if (res == ")"){
             openParenthesisNum--;
-            if (openParenthesisNum == 0)
+            if (openParenthesisNum == 0){
+                if (!utils::stringHasContent(extensionContent))
+                    throw TemplateError{nodePos + " " + nodeExtensionName(extensionType) + " can't be empty"};
                 return {extensionType, extensionContent};
+            }
         }
         extensionContent += res;
     }
-    throw ParsingError{"Extension doesn't have a closing ')'"};
+    throw TemplateError{nodePos + " " + nodeExtensionName(extensionType) + " isn't closed with ')'"};
 }
 
 }

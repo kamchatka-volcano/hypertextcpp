@@ -2,16 +2,13 @@
 #include "streamreader.h"
 #include "errors.h"
 #include <sstream>
-#include <cassert>
+#include <algorithm>
 
-namespace htcpp{
+namespace htcpp::utils{
 
 //https://developer.mozilla.org/en-US/docs/Glossary/Empty_element
 bool isTagEmptyElement(const std::string& tagName)
-{
-    assert(!tagName.empty());
-    if (tagName.front() == '!')
-        return true;
+{    
     if (tagName == "area")
         return true;
     if (tagName == "base")
@@ -42,8 +39,16 @@ bool isTagEmptyElement(const std::string& tagName)
         return true;
     if (tagName == "wbr")
         return true;
+    if (tagName.front() == '!')
+        return true;
 
     return false;
+}
+
+bool stringHasContent(const std::string& str)
+{
+    auto nonWhitespaceIt = std::find_if(str.begin(), str.end(), [](auto ch){return !std::isspace(ch);});
+    return nonWhitespaceIt != str.end();
 }
 
 std::string preprocessRawStrings(const std::string& cppCode)

@@ -3,6 +3,7 @@
 #include "errors.h"
 #include "nodereader.h"
 #include "textnode.h"
+#include <gsl/assert>
 
 namespace htcpp{
 
@@ -12,8 +13,9 @@ SectionNode::SectionNode()
 
 void SectionNode::load(StreamReader& stream)
 {
-    if (stream.read(2) != "[[") //assert?
-        throw TemplateError{"Invalid section"};
+    const auto nodePos = stream.positionInfo();
+    Expects(stream.read(2) == "[[");
+
     extension_ = readNodeExtension(stream);
 
     auto readedText = std::string{};
@@ -24,10 +26,11 @@ void SectionNode::load(StreamReader& stream)
                 contentNodes_.emplace_back(std::make_unique<TextNode>(readedText));
                 readedText.clear();
             }
-            auto closingBracesExtension = readNodeExtension(stream);
+            const auto extensionPos = stream.positionInfo();
+            const auto closingBracesExtension = readNodeExtension(stream);
             if (!closingBracesExtension.isEmpty()){
                 if (!extension_.isEmpty())
-                    throw TemplateError{"Section can't have multiple extensions"};
+                    throw TemplateError{extensionPos + " section can't have multiple extensions"};
                 extension_ = closingBracesExtension;
                 extensionIsOnClosingBraces_ = true;
             }
@@ -45,7 +48,7 @@ void SectionNode::load(StreamReader& stream)
         else
             readedText += stream.read();
     }
-    throw TemplateError{"Section is unclosed"};
+    throw TemplateError{nodePos + " section isn't closed with ']]'"};
 }
 
 std::string SectionNode::docTemplate()

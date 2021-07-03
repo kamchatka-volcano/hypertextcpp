@@ -6,6 +6,6 @@
 TEST(PreprocessRawString, Basic)
 {
     auto code = "auto x = `Hello World`;";
-    EXPECT_EQ(htcpp::preprocessRawStrings(code),
+    EXPECT_EQ(htcpp::utils::preprocessRawStrings(code),
               "auto x = R\"(Hello World)\";");
 }

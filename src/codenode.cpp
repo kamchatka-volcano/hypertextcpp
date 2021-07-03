@@ -2,24 +2,27 @@
 #include "streamreader.h"
 #include "errors.h"
 #include "utils.h"
+#include <gsl/assert>
 
 namespace htcpp{
 
-CodeNode::CodeNode(char idToken,
+CodeNode::CodeNode(const std::string& name,
+                   char idToken,
                    char openToken,
                    char closeToken,
                    bool isGlobalScoped)
-    : idToken_(idToken)
+    : name_(name)
+    , idToken_(idToken)
     , openToken_(openToken)
     , closeToken_(closeToken)
     , isGlobalScoped_(isGlobalScoped)
-{}
+{
+}
 
 void CodeNode::load(StreamReader& stream)
 {
-    if (stream.peek(2) != std::string{} + idToken_ + openToken_)
-        throw TemplateError{"Invalid rendered expression"};
-    stream.skip(2);
+    auto nodePosInfo = stream.positionInfo();
+    Expects(stream.read(2) == std::string{} + idToken_ + openToken_);
 
     auto openParenthesisNum = 1;
     auto insideString = false;
@@ -39,7 +42,7 @@ void CodeNode::load(StreamReader& stream)
         }
         content_ += res;
     }
-    throw TemplateError{"Rendered expression is unclosed"};
+    throw TemplateError{nodePosInfo += " " + name_ + " isn't closed with '" + closeToken_ + "'"};
 }
 
 std::string CodeNode::docTemplate()
@@ -49,12 +52,12 @@ std::string CodeNode::docTemplate()
 
 std::string CodeNode::docRenderingCode()
 {
-    return preprocessRawStrings(content_);
+    return utils::preprocessRawStrings(content_);
 }
 
 std::string ExpressionNode::docRenderingCode()
 {
-    return "out << (" + preprocessRawStrings(content_) + ");";
+    return "out << (" + utils::preprocessRawStrings(content_) + ");";
 }
 
 bool CodeNode::isGlobalScoped()

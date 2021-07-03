@@ -1,7 +1,7 @@
 #include "nameutils.h"
 #include <algorithm>
 
-namespace htcpp{
+namespace htcpp::utils{
 namespace{
 std::string formatName(const std::string& name)
 {

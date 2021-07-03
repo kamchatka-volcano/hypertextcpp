@@ -4,30 +4,6 @@
 #include <istream>
 
 namespace htcpp{
-//StreamPart::StreamPart() = default;
-//StreamPart::StreamPart(const std::string& value)
-//    : value_(value)
-//{}
-
-//StreamPart::operator bool()
-//{
-//    return !value_.empty();
-//}
-
-//bool StreamPart::operator==(const std::string& str)
-//{
-//    return value_ == str;
-//}
-
-//bool StreamPart::operator!=(const std::string& str)
-//{
-//    return value_ != str;
-//}
-
-//const std::string& StreamPart::value() const
-//{
-//    return value_;
-//}
 
 StreamReader::StreamReader(std::istream& stream, int firstLine, int firstColumn)
     : stream_(stream)
@@ -99,7 +75,7 @@ int StreamReader::column() const
 std::string StreamReader::positionInfo() const
 {
     auto stream = std::stringstream{};
-    stream << "[line:"<< firstLine_ + line_ - 1 << ", column:" << firstColumn_ + column_<< "]";
+    stream << "[line:"<< firstLine_ + line_ << ", column:" << firstColumn_ + column_<< "]";
     return stream.str();
 }
 

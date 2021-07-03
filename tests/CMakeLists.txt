@@ -25,4 +25,5 @@ set(SRC
 add_executable(test_hypertextcpp ${SRC})
 add_test(NAME test_hypertextcpp COMMAND test_hypertextcpp)
 target_include_directories(test_hypertextcpp PRIVATE ../src)
+target_include_directories(test_hypertextcpp PRIVATE ../lib/gsl/include)
 target_link_libraries(test_hypertextcpp gtest gmock gtest_main pthread)

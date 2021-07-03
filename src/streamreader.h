@@ -4,20 +4,6 @@
 
 namespace htcpp{
 
-//class StreamPart{
-//public:
-//    StreamPart();
-//    StreamPart(const std::string& value);
-
-//    operator bool();
-//    bool operator==(const std::string& str);
-//    bool operator!=(const std::string& str);
-//    const std::string& value() const;
-
-//private:
-//    std::string value_;
-//};
-
 class StreamReader{
 public:
     StreamReader(std::istream& stream, int firstLine = 0, int firstColumn = 0);

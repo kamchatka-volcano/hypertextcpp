@@ -16,7 +16,7 @@ std::vector<std::unique_ptr<IDocumentNode>> parseTemplateFile(const fs::path& fi
     auto nodeList = std::vector<std::unique_ptr<IDocumentNode>>{};
     auto fileStream = std::ifstream{filePath};
     if (!fileStream.is_open())
-        throw Error("Can't open file " + filePath.string());
+        throw ParsingError("Can't open file " + filePath.string());
 
     StreamReader stream(fileStream);
     std::string readedText;

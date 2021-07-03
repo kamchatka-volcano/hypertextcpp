@@ -5,13 +5,15 @@
 #include "string_utils.h"
 #include "errors.h"
 #include "utils.h"
+#include <gsl/assert>
 
 namespace htcpp{
 
 void TagNode::load(StreamReader& stream)
 {        
-    if (stream.read() != "<")
-        throw ParsingError{"Invalid tag"};
+    const auto nodePos = stream.positionInfo();
+    Expects(stream.read() == "<");
+
     while(!stream.atEnd()){
         if (name_.empty()){
             if (readName(stream) == ReadResult::ParsingCompleted)
@@ -28,10 +30,11 @@ void TagNode::load(StreamReader& stream)
         if (stream.peek(closingTagSize) == closingTag){
             consumeReadedText(contentNodes_);
             stream.skip(closingTagSize);
-            auto closingTagExtension = readNodeExtension(stream);
+            const auto extensionPos = stream.positionInfo();
+            const auto closingTagExtension = readNodeExtension(stream);
             if (!closingTagExtension.isEmpty()){
                 if (!extension_.isEmpty())
-                    throw TemplateError{"Tag can't have multiple extensions"};
+                    throw TemplateError{extensionPos + " tag can't have multiple extensions"};
                 extension_ = closingTagExtension;
                 extensionIsOnClosingTag_ = true;
             }
@@ -46,7 +49,7 @@ void TagNode::load(StreamReader& stream)
         else
             readedText_ += stream.read();
     }
-    throw ParsingError{"Tag is unclosed"};
+    throw TemplateError{nodePos + " tag isn't closed with '>'"};
 }
 
 TagNode::ReadResult TagNode::readName(StreamReader& stream)
@@ -61,7 +64,7 @@ TagNode::ReadResult TagNode::readName(StreamReader& stream)
         stream.skip(1);
         extension_ = readNodeExtension(stream);
         attributesReaded_ = true;
-        if (isTagEmptyElement(name_)){
+        if (utils::isTagEmptyElement(name_)){
             return ReadResult::ParsingCompleted;
         }
     }
@@ -78,7 +81,7 @@ TagNode::ReadResult TagNode::readAttributes(StreamReader& stream)
         consumeReadedText(attributeNodes_);
         stream.skip(1);
         extension_ = readNodeExtension(stream);
-        if (isTagEmptyElement(name_))
+        if (utils::isTagEmptyElement(name_))
             return ReadResult::ParsingCompleted;
         return ReadResult::Ok;
     }
@@ -115,7 +118,7 @@ std::string TagNode::docTemplate()
 
     for (auto& node : contentNodes_)
         result += node->docTemplate();
-    if (!isTagEmptyElement(name_))
+    if (!utils::isTagEmptyElement(name_))
         result += "</" + name_ + ">";
     if (extensionIsOnClosingTag_)
         result += extension_.docTemplate();
@@ -138,7 +141,7 @@ std::string TagNode::docRenderingCode()
 
     for (auto& node : contentNodes_)
         result += node->docRenderingCode();
-    if (!isTagEmptyElement(name_))
+    if (!utils::isTagEmptyElement(name_))
         result += "out << \"</" + name_ + ">\";\n";
     if (!extension_.isEmpty())
         result += "}\n";

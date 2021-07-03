@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <nameutils.h>
 
-using namespace htcpp;
+using namespace htcpp::utils;
 
 TEST(NameUtils, SnakeToPascal)
 {

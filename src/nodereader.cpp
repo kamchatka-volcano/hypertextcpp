@@ -16,7 +16,7 @@ std::unique_ptr<IDocumentNode> readCommonNodes(StreamReader& stream)
     if (stream.peek(2) == "$(")
         return std::make_unique<ExpressionNode>();
     if (stream.peek(2) == "${")
-        return std::make_unique<RenderCodeNode>();
+        return std::make_unique<RenderStatementNode>();
     return nullptr;
 
 }
@@ -29,7 +29,7 @@ std::unique_ptr<IDocumentNode> readTopLevelNode(StreamReader& stream)
     if (stream.peek() == "<")
         return std::make_unique<TagNode>();
     if (stream.peek(2) == "#{")
-        return std::make_unique<GlobalCodeNode>();
+        return std::make_unique<GlobalStatementNode>();
     return readCommonNodes(stream);
 }
 

@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-namespace htcpp{
+namespace htcpp::utils{
 
 std::string toPascalCase(const std::string& name);
 std::string toSnakeCase(const std::string& name);

@@ -1,5 +1,4 @@
-#ifndef ERRORS_H
-#define ERRORS_H
+#pragma once
 #include <stdexcept>
 #include <string>
 
@@ -12,13 +11,12 @@ public:
     {}
 };
 
-class TemplateError : public Error{
-    using Error::Error;
-};
-
 class ParsingError : public Error{
     using Error::Error;
 };
 
+class TemplateError : public Error{
+    using Error::Error;
+};
+
 }
-#endif // ERRORS_H

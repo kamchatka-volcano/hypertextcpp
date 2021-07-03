@@ -11,8 +11,7 @@ public:
         Loop,
         None
     };
-    NodeExtension();
-    NodeExtension(Type type, const std::string& content);
+    NodeExtension();    
     std::string docTemplate() const;
     bool isEmpty() const;
 
@@ -20,8 +19,14 @@ public:
     const std::string& content() const;
 
 private:
+    NodeExtension(Type type,
+                  const std::string& content);
+
+private:
     Type type_ = Type::None;
     std::string content_;
+
+friend NodeExtension readNodeExtension(StreamReader& stream);
 };
 
 NodeExtension readNodeExtension(StreamReader& stream);

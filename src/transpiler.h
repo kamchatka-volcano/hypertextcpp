@@ -3,9 +3,8 @@
 #include <string>
 #include <map>
 
-namespace fs = std::filesystem;
-
 namespace htcpp{
+namespace fs = std::filesystem;
 
 std::string transpileToSingleHeaderRendererClass(const fs::path& filePath,
                                                  const std::string& className);
