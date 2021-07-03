@@ -9,7 +9,17 @@
 
 namespace htcpp{
 
-void TagNode::load(StreamReader& stream)
+TagNode::TagNode(StreamReader& stream, NodeReader& nodeReader)
+{
+    load(stream, nodeReader);
+}
+
+const NodeExtension& TagNode::extension() const
+{
+    return extension_;
+}
+
+void TagNode::load(StreamReader& stream, NodeReader& nodeReader)
 {        
     const auto nodePos = stream.positionInfo();
     Expects(stream.read() == "<");
@@ -21,7 +31,7 @@ void TagNode::load(StreamReader& stream)
             continue;
         }
         if (!attributesReaded_){
-            if (readAttributes(stream) == ReadResult::ParsingCompleted)
+            if (readAttributes(stream, nodeReader) == ReadResult::ParsingCompleted)
                 return;
             continue;
         }
@@ -40,10 +50,9 @@ void TagNode::load(StreamReader& stream)
             }
             return;
         }        
-        auto node = readTagContentNode(stream);
+        auto node = nodeReader.readTagContentNode(stream);
         if (node){
-            consumeReadedText(contentNodes_);
-            node->load(stream);
+            consumeReadedText(contentNodes_);            
             contentNodes_.emplace_back(std::move(node));
         }
         else
@@ -74,7 +83,7 @@ TagNode::ReadResult TagNode::readName(StreamReader& stream)
     return ReadResult::Ok;
 }
 
-TagNode::ReadResult TagNode::readAttributes(StreamReader& stream)
+TagNode::ReadResult TagNode::readAttributes(StreamReader& stream, NodeReader& nodeReader)
 {    
     if (stream.peek() == ">"){
         attributesReaded_ = true;
@@ -86,10 +95,9 @@ TagNode::ReadResult TagNode::readAttributes(StreamReader& stream)
         return ReadResult::Ok;
     }
 
-    auto node = readTagAttributeNode(stream);
+    auto node = nodeReader.readTagAttributeNode(stream);
     if (node){
-        consumeReadedText(attributeNodes_);
-        node->load(stream);
+        consumeReadedText(attributeNodes_);        
         attributeNodes_.emplace_back(std::move(node));
     }
     else

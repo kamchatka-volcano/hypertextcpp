@@ -10,19 +10,22 @@ CodeNode::CodeNode(const std::string& name,
                    char idToken,
                    char openToken,
                    char closeToken,
-                   bool isGlobalScoped)
+                   bool isGlobal,
+                   StreamReader& stream)
     : name_(name)
     , idToken_(idToken)
     , openToken_(openToken)
     , closeToken_(closeToken)
-    , isGlobalScoped_(isGlobalScoped)
+    , isGlobal_(isGlobal)
 {
+    load(stream);
 }
 
 void CodeNode::load(StreamReader& stream)
 {
     auto nodePosInfo = stream.positionInfo();
     Expects(stream.read(2) == std::string{} + idToken_ + openToken_);
+    extension_ = readNodeExtension(stream);
 
     auto openParenthesisNum = 1;
     auto insideString = false;
@@ -36,8 +39,17 @@ void CodeNode::load(StreamReader& stream)
                 openParenthesisNum++;
             else if (res.front() == closeToken_){
                 openParenthesisNum--;
-                if (openParenthesisNum == 0)
+                if (openParenthesisNum == 0){
+                    const auto extensionPos = stream.positionInfo();
+                    const auto closingTokenExtension = readNodeExtension(stream);
+                    if (!closingTokenExtension.isEmpty()){
+                        if (!extension_.isEmpty())
+                            throw TemplateError{extensionPos + " " + name_ + " can't have multiple extensions"};
+                        extension_ = closingTokenExtension;
+                        extensionIsOnClosingToken_ = true;
+                    }
                     return;
+                }
             }
         }
         content_ += res;
@@ -47,7 +59,14 @@ void CodeNode::load(StreamReader& stream)
 
 std::string CodeNode::docTemplate()
 {
-    return (std::string{} + idToken_ + openToken_) + content_ + closeToken_;
+    auto result = std::string{};
+    result += std::string{} + idToken_ + openToken_;
+    if (!extensionIsOnClosingToken_)
+        result += extension_.docTemplate();
+    result += content_ + closeToken_;
+    if (extensionIsOnClosingToken_)
+        result += extension_.docTemplate();
+    return result;
 }
 
 std::string CodeNode::docRenderingCode()
@@ -57,12 +76,22 @@ std::string CodeNode::docRenderingCode()
 
 std::string ExpressionNode::docRenderingCode()
 {
-    return "out << (" + utils::preprocessRawStrings(content_) + ");";
+    auto result = std::string{};
+    if (!extension_.isEmpty()){
+        if (extension_.type() == NodeExtension::Type::Conditional)
+            result += "if (" + extension_.content() + "){\n";
+        else if (extension_.type() == NodeExtension::Type::Loop)
+            result += "for (" + extension_.content() + "){\n";
+    }
+    result += "out << (" + utils::preprocessRawStrings(content_) + ");";
+    if (!extension_.isEmpty())
+        result += "}\n";
+    return result;
 }
 
-bool CodeNode::isGlobalScoped()
+bool CodeNode::isGlobal()
 {
-    return isGlobalScoped_;
+    return isGlobal_;
 }
 
 }

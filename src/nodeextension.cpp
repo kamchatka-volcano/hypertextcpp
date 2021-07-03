@@ -11,6 +11,7 @@ std::string nodeExtensionName(NodeExtension::Type type)
     switch(type){
     case NodeExtension::Type::Conditional : return "Conditional extension";
     case NodeExtension::Type::Loop: return "Loop extension";
+    case NodeExtension::Type::Macro: return "Macro extension";
     default: return {};
     }
 }
@@ -44,6 +45,7 @@ std::string NodeExtension::docTemplate() const
     switch(type_){
     case NodeExtension::Type::Conditional : return "?(" + content_ + ")";
     case NodeExtension::Type::Loop: return "@(" + content_ + ")";
+    case NodeExtension::Type::Macro: return "#(" + content_ + ")";
     default: return {};
     }
 }
@@ -59,6 +61,8 @@ NodeExtension readNodeExtension(StreamReader& stream)
         extensionType = NodeExtension::Type::Conditional;
     else if (nextChars == "@(")
         extensionType = NodeExtension::Type::Loop;
+    else if (nextChars == "#(")
+        extensionType = NodeExtension::Type::Macro;
 
     if (extensionType == NodeExtension::Type::None)
         return{};

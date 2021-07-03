@@ -1,5 +1,6 @@
 #pragma once
 #include "idocumentnode.h"
+#include "nodeextension.h"
 
 namespace htcpp{
 
@@ -9,28 +10,33 @@ public:
              char idToken,
              char openToken,
              char closeToken,
-             bool isGlobalScoped);
-    void load(StreamReader& stream) override;
+             bool isGlobal,
+             StreamReader& stream);
     std::string docTemplate() override;
     std::string docRenderingCode() override;
-    bool isGlobalScoped() override;
+    bool isGlobal() override;
 
 protected:
     std::string content_;
+    NodeExtension extension_;
+
+private:
+    void load(StreamReader& stream);
 
 private:
     std::string name_;
     char idToken_;
     char openToken_;
     char closeToken_;
-    bool isGlobalScoped_;
+    bool isGlobal_;
+    bool extensionIsOnClosingToken_ = false;
 };
 
 class ExpressionNode : public CodeNode
 {
 public:
-    ExpressionNode() :
-        CodeNode("Expression ", '$', '(', ')', false)
+    ExpressionNode(StreamReader& stream) :
+        CodeNode("Expression ", '$', '(', ')', false, stream)
     {}
     std::string docRenderingCode() override;
 };
@@ -38,16 +44,16 @@ public:
 class RenderStatementNode : public CodeNode
 {
 public:
-    RenderStatementNode() :
-        CodeNode("Render statement", '$', '{', '}', false)
-    {}
+    RenderStatementNode(StreamReader& stream) :
+        CodeNode("Render statement", '$', '{', '}', false, stream)
+    {}    
 };
 
 class GlobalStatementNode : public CodeNode
 {
 public:
-    GlobalStatementNode() :
-        CodeNode("Global statement", '#', '{', '}', true)
+    GlobalStatementNode(StreamReader& stream) :
+        CodeNode("Global statement", '#', '{', '}', true, stream)
     {}
 };
 

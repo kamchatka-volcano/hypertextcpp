@@ -9,10 +9,9 @@ namespace{
 template <typename TNode>
 void test(const std::string& input, const std::string& expected)
 {
-    auto stream = std::istringstream{input};
-    auto tag = TNode{};
+    auto stream = std::istringstream{input};    
     auto streamReader = htcpp::StreamReader{stream};
-    tag.load(streamReader);
+    auto tag = TNode{streamReader};
     auto result = tag.docTemplate();
     EXPECT_EQ(result, expected);
 }
@@ -47,6 +46,50 @@ TEST(RenderedExpressionNode, WithStringOutput)
             ("$( isVisible ? `Hello:)` : defaultValue())",
              "$( isVisible ? `Hello:)` : defaultValue())");
 }
+
+TEST(RenderedExpressionNode, WithConditionalExtension)
+{
+    test<htcpp::ExpressionNode>
+            ("$(?(isVisible) isVisible ? 100 : defaultValue())",
+             "$(?(isVisible) isVisible ? 100 : defaultValue())");
+}
+
+TEST(RenderedExpressionNode, WithLoopExtension)
+{
+    test<htcpp::ExpressionNode>
+            ("$(@(auto i = 0; i < 5; ++i) isVisible ? 100 : defaultValue())",
+             "$(@(auto i = 0; i < 5; ++i) isVisible ? 100 : defaultValue())");
+}
+
+TEST(RenderedExpressionNode, WithMacroExtension)
+{
+    test<htcpp::ExpressionNode>
+            ("$(#(test_macro) isVisible ? 100 : defaultValue())",
+             "$(#(test_macro) isVisible ? 100 : defaultValue())");
+}
+
+TEST(RenderedExpressionNode, WithConditionalExtensionOnClosingBraces)
+{
+    test<htcpp::ExpressionNode>
+            ("$( isVisible ? 100 : defaultValue())?(isVisible)",
+             "$( isVisible ? 100 : defaultValue())?(isVisible)");
+}
+
+TEST(RenderedExpressionNode, WithLoopExtensionOnClosingBraces)
+{
+    test<htcpp::ExpressionNode>
+            ("$( isVisible ? 100 : defaultValue())@(auto i = 0; i < 5; ++i)",
+             "$( isVisible ? 100 : defaultValue())@(auto i = 0; i < 5; ++i)");
+}
+
+
+TEST(RenderedExpressionNode, WithMacroExtensionOnClosingBraces)
+{
+    test<htcpp::ExpressionNode>
+            ("$( isVisible ? 100 : defaultValue())#(test_macro)",
+             "$( isVisible ? 100 : defaultValue())#(test_macro)");
+}
+
 
 TEST(RenderingCodeNode, Basic)
 {

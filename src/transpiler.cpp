@@ -18,17 +18,17 @@ std::vector<std::unique_ptr<IDocumentNode>> parseTemplateFile(const fs::path& fi
     if (!fileStream.is_open())
         throw ParsingError("Can't open file " + filePath.string());
 
-    StreamReader stream(fileStream);
-    std::string readedText;
+    auto stream = StreamReader{fileStream};
+    auto nodeReader = NodeReader{};
+    auto readedText = std::string{};
 
     while(!stream.atEnd()){
-        auto node = readTopLevelNode(stream);
+        auto node = nodeReader.readTopLevelNode(stream);
         if (node){
             if (!readedText.empty()){
                 nodeList.emplace_back(std::make_unique<TextNode>(readedText));
                 readedText.clear();
-            }
-            node->load(stream);
+            }            
             nodeList.push_back(std::move(node));
         }
         else{
@@ -51,7 +51,7 @@ std::string transpileToSingleHeaderRendererClass(const fs::path& filePath, const
     "#include <iostream>\n"
     "#include <sstream>\n";
     for(auto& node : nodeList)
-        if (node->isGlobalScoped())
+        if (node->isGlobal())
             result += node->docRenderingCode() + "\n";
 
     result +=
@@ -62,7 +62,7 @@ std::string transpileToSingleHeaderRendererClass(const fs::path& filePath, const
     "        {\n";
 
     for(auto& node : nodeList)
-        if (!node->isGlobalScoped())
+        if (!node->isGlobal())
             result += node->docRenderingCode();
 
     result +=
@@ -147,7 +147,7 @@ std::string transpileToSharedLibRendererClass(const fs::path& filePath)
 
     )"};
     for(auto& node : nodeList)
-        if (node->isGlobalScoped())
+        if (node->isGlobal())
             result += node->docRenderingCode() + "\n";
 
     result +=
@@ -155,7 +155,7 @@ std::string transpileToSharedLibRendererClass(const fs::path& filePath)
     "{\n";
 
     for(auto& node : nodeList)
-        if (!node->isGlobalScoped())
+        if (!node->isGlobal())
             result += node->docRenderingCode();
     result += "\n}\n";
 

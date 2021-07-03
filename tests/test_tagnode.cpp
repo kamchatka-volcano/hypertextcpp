@@ -3,15 +3,16 @@
 #include <errors.h>
 #include <tagnode.h>
 #include <streamreader.h>
+#include <nodereader.h>
 
 namespace{
 
 void test(const std::string& input, const std::string& expected)
 {
     auto stream = std::istringstream{input};
-    auto tag = htcpp::TagNode{};
     auto streamReader = htcpp::StreamReader{stream};
-    tag.load(streamReader);
+    auto nodeReader = htcpp::NodeReader{};
+    auto tag = htcpp::TagNode{streamReader, nodeReader};
     auto result = tag.docTemplate();
     EXPECT_EQ(result, expected);
 }
@@ -21,9 +22,9 @@ void testError(const std::string& input, const std::string& expectedErrorMsg)
     assert_exception<htcpp::TemplateError>(
         [input]{
             auto stream = std::istringstream{input};
-            auto token = htcpp::TagNode{};
             auto streamReader = htcpp::StreamReader{stream};
-            token.load(streamReader);
+            auto nodeReader = htcpp::NodeReader{};
+            auto token = htcpp::TagNode{streamReader, nodeReader};
         },
         [expectedErrorMsg](const htcpp::TemplateError& e){
             EXPECT_EQ(e.what(), expectedErrorMsg);

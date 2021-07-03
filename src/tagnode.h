@@ -5,6 +5,7 @@
 #include <memory>
 
 namespace htcpp{
+class NodeReader;
 
 class TagNode : public IDocumentNode
 {
@@ -14,16 +15,18 @@ class TagNode : public IDocumentNode
     };
 
 public:
-    void load(StreamReader& stream) override;
+    TagNode(StreamReader& stream, NodeReader& nodeReader);
     std::string docTemplate() override;
     std::string docRenderingCode() override;
+    const NodeExtension& extension() const;
 
 private:
+    void load(StreamReader& stream, NodeReader& nodeReader);
     ReadResult readName(StreamReader& stream);
-    ReadResult readAttributes(StreamReader& stream);
+    ReadResult readAttributes(StreamReader& stream, NodeReader& nodeReader);
     void consumeReadedText(std::vector<std::unique_ptr<IDocumentNode>>& nodes);
 
-private:
+private:    
     std::string readedText_;
     std::string name_;
     bool attributesReaded_ = false;

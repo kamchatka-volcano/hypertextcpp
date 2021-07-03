@@ -7,11 +7,17 @@
 
 namespace htcpp{
 
-SectionNode::SectionNode()
+SectionNode::SectionNode(StreamReader& stream, NodeReader& nodeReader)
 {
+    load(stream, nodeReader);
 }
 
-void SectionNode::load(StreamReader& stream)
+const NodeExtension& SectionNode::extension() const
+{
+    return extension_;
+}
+
+void SectionNode::load(StreamReader& stream, NodeReader& nodeReader)
 {
     const auto nodePos = stream.positionInfo();
     Expects(stream.read(2) == "[[");
@@ -36,13 +42,12 @@ void SectionNode::load(StreamReader& stream)
             }
             return;
         }
-        auto node = readSectionNode(stream);
+        auto node = nodeReader.readSectionNode(stream);
         if (node){
             if (!readedText.empty()){
                 contentNodes_.emplace_back(std::make_unique<TextNode>(readedText));
                 readedText.clear();
-            }
-            node->load(stream);
+            }            
             contentNodes_.emplace_back(std::move(node));
         }
         else

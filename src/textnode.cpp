@@ -7,9 +7,6 @@ TextNode::TextNode(const std::string& value)
 {
 }
 
-void TextNode::load(StreamReader&)
-{
-}
 
 std::string TextNode::docTemplate()
 {
