@@ -80,7 +80,7 @@ std::string SectionNode::docRenderingCode()
     }
     for (auto& node : contentNodes_)
         result += node->docRenderingCode();
-    if (!extension_.isEmpty())
+    if (!extension_.isEmpty() && extension_.type() != NodeExtension::Type::Macro)
         result += "}\n";
     return result;
 }

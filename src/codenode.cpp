@@ -84,7 +84,7 @@ std::string ExpressionNode::docRenderingCode()
             result += "for (" + extension_.content() + "){\n";
     }
     result += "out << (" + utils::preprocessRawStrings(content_) + ");";
-    if (!extension_.isEmpty())
+    if (!extension_.isEmpty() && extension_.type() != NodeExtension::Type::Macro)
         result += "}\n";
     return result;
 }

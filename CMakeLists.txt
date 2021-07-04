@@ -41,3 +41,5 @@ endif()
 
 include(GNUInstallDirs)
 install(TARGETS hypertextcpp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(DIRECTORY shared_lib_api/include/hypertextcpp
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

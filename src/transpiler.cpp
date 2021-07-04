@@ -118,18 +118,18 @@ std::string transpileToSharedLibRendererClass(const fs::path& filePath)
         std::string render(const Cfg& cfg)\
         {\
            auto stream  = std::stringstream{};\
-           impl_.render(cfg, stream);\
+           impl_.renderHTML(cfg, stream);\
           return stream.str();\
         }\
     \
         void print(const Cfg& cfg)\
         {\
-            impl_.render(cfg, std::cout);\
+            impl_.renderHTML(cfg, std::cout);\
         }\
     \
         void print(const Cfg& cfg, std::ostream& stream)\
         {\
-            impl_.render(cfg, stream);\
+            impl_.renderHTML(cfg, stream);\
         }\
     };\
     \

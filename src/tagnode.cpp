@@ -151,7 +151,7 @@ std::string TagNode::docRenderingCode()
         result += node->docRenderingCode();
     if (!utils::isTagEmptyElement(name_))
         result += "out << \"</" + name_ + ">\";\n";
-    if (!extension_.isEmpty())
+    if (!extension_.isEmpty() && extension_.type() != NodeExtension::Type::Macro)
         result += "}\n";
 
     return result;
