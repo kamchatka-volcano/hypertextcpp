@@ -8,6 +8,7 @@ class StreamReader;
 
 class NodeReader{
 public:
+    NodeReader(std::map<std::string, std::string>& prototypeFuncMap);
     std::unique_ptr<IDocumentNode> readTopLevelNode(StreamReader& stream);
     std::unique_ptr<IDocumentNode> readTagAttributeNode(StreamReader& stream);
     std::unique_ptr<IDocumentNode> readTagContentNode(StreamReader& stream);
@@ -17,7 +18,7 @@ private:
     std::unique_ptr<IDocumentNode> readCommonNodes(StreamReader& stream);
 
 private:
-    std::map<std::string, std::string> macrosMap_;
+    std::map<std::string, std::string>& prototypeFuncMap_;
 };
 
 

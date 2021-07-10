@@ -75,7 +75,7 @@ std::string SectionNode::docRenderingCode()
     }
     for (auto& node : contentNodes_)
         result += node->docRenderingCode();
-    if (!extension_.isEmpty() && extension_.type() != NodeExtension::Type::Macro)
+    if (!extension_.isEmpty() && extension_.type() != NodeExtension::Type::Prototype)
         result += "}\n";
     return result;
 }

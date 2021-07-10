@@ -12,7 +12,8 @@ void test(const std::string& input, const std::string& expected)
 {
     auto stream = std::istringstream{input};
     auto streamReader = htcpp::StreamReader{stream};
-    auto nodeReader = htcpp::NodeReader{};
+    auto funcMap = std::map<std::string, std::string>{};
+    auto nodeReader = htcpp::NodeReader{funcMap};
     auto tag = htcpp::SectionNode{streamReader, nodeReader};
     auto result = tag.docTemplate();
     EXPECT_EQ(result, expected);
@@ -24,7 +25,8 @@ void testError(const std::string& input, const std::string& expectedErrorMsg)
         [input]{
             auto stream = std::istringstream{input};
             auto streamReader = htcpp::StreamReader{stream};
-            auto nodeReader = htcpp::NodeReader{};
+            auto funcMap = std::map<std::string, std::string>{};
+            auto nodeReader = htcpp::NodeReader{funcMap};
             auto node = htcpp::SectionNode{streamReader, nodeReader};
         },
         [expectedErrorMsg](const htcpp::TemplateError& e){

@@ -9,7 +9,11 @@ class ITemplate{
 public:
     virtual ~ITemplate() = default;
     virtual std::string render(const TCfg&) = 0;
+    virtual std::string render(const std::string& renderFuncName, const TCfg&) = 0;
     virtual void print(const TCfg&) = 0;
+    virtual void print(const std::string& renderFuncName, const TCfg&) = 0;
+    virtual void print(const TCfg& cfg, std::ostream& stream) = 0;
+    virtual void print(const std::string& renderFuncName, const TCfg& cfg, std::ostream& stream) = 0;
 };
 
 template<typename TCfg>

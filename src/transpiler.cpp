@@ -1,17 +1,21 @@
 #include "transpiler.h"
-#include <sstream>
-#include <fstream>
-#include <vector>
-#include <memory>
 #include "textnode.h"
 #include "streamreader.h"
 #include "nodereader.h"
 #include "errors.h"
 #include "utils.h"
+#include <sstream>
+#include <fstream>
+#include <vector>
+#include <memory>
+#include <map>
+#include <tuple>
 
 namespace htcpp{
 namespace {
-std::vector<std::unique_ptr<IDocumentNode>> parseTemplateFile(const fs::path& filePath)
+
+std::tuple<std::vector<std::unique_ptr<IDocumentNode>>,
+           std::map<std::string, std::string>> parseTemplateFile(const fs::path& filePath)
 {
     auto nodeList = std::vector<std::unique_ptr<IDocumentNode>>{};
     auto fileStream = std::ifstream{filePath};
@@ -19,7 +23,8 @@ std::vector<std::unique_ptr<IDocumentNode>> parseTemplateFile(const fs::path& fi
         throw ParsingError("Can't open file " + filePath.string());
 
     auto stream = StreamReader{fileStream};
-    auto nodeReader = NodeReader{};
+    auto prototypeFuncMap = std::map<std::string, std::string>{};
+    auto nodeReader = NodeReader{prototypeFuncMap};
     auto readedText = std::string{};
 
     while(!stream.atEnd()){
@@ -33,13 +38,13 @@ std::vector<std::unique_ptr<IDocumentNode>> parseTemplateFile(const fs::path& fi
         }
     }
     utils::consumeReadedText(readedText, nodeList);
-    return nodeList;
+    return {std::move(nodeList), prototypeFuncMap};
 }
 }
 
 std::string transpileToSingleHeaderRendererClass(const fs::path& filePath, const std::string& className)
 {
-    const auto nodeList = parseTemplateFile(filePath);
+    const auto [nodeList, funcMap] = parseTemplateFile(filePath);
     auto result = std::string{};
     result +=
     "#include <iostream>\n"
@@ -47,6 +52,12 @@ std::string transpileToSingleHeaderRendererClass(const fs::path& filePath, const
     for(auto& node : nodeList)
         if (node->isGlobal())
             result += node->docRenderingCode() + "\n";
+
+    for (const auto& nameFuncPair : funcMap){
+        result += "template <typename TCfg>\n";
+        result += nameFuncPair.first + "(const TCfg& cfg, std::ostream& out){\n";
+        result += nameFuncPair.second + "}\n";
+    }
 
     result +=
     "class " + className + "{\n"
@@ -87,7 +98,7 @@ std::string transpileToSingleHeaderRendererClass(const fs::path& filePath, const
 
 std::string transpileToSharedLibRendererClass(const fs::path& filePath)
 {
-    const auto nodeList = parseTemplateFile(filePath);
+    const auto [nodeList, funcMap] = parseTemplateFile(filePath);
     auto result = std::string{R"(
     #include <string>
     #include <iostream>
@@ -99,7 +110,11 @@ std::string transpileToSharedLibRendererClass(const fs::path& filePath)
     public:
         virtual ~ITemplate() = default;
         virtual std::string render(const TCfg&) = 0;
+        virtual std::string render(const std::string& renderFuncName, const TCfg&) = 0;
         virtual void print(const TCfg&) = 0;
+        virtual void print(const std::string& renderFuncName, const TCfg&) = 0;
+        virtual void print(const TCfg& cfg, std::ostream& stream) = 0;
+        virtual void print(const std::string& renderFuncName, const TCfg& cfg, std::ostream& stream) = 0;
     };
     }
 
@@ -107,23 +122,38 @@ std::string transpileToSharedLibRendererClass(const fs::path& filePath)
     struct Template : public htcpp::ITemplate<Cfg>{\
         struct Impl{\
             void renderHTML(const Cfg& cfg, std::ostream& out);\
+            void renderHTMLPart(const std::string& name, const Cfg& cfg, std::ostream& out);\
         } impl_;\
     \
-        std::string render(const Cfg& cfg)\
+        std::string render(const Cfg& cfg) override\
         {\
            auto stream  = std::stringstream{};\
            impl_.renderHTML(cfg, stream);\
           return stream.str();\
         }\
+        std::string render(const std::string& renderFuncName, const Cfg& cfg) override\
+        {\
+           auto stream  = std::stringstream{};\
+           impl_.renderHTMLPart(renderFuncName, cfg, stream);\
+          return stream.str();\
+        }\
     \
-        void print(const Cfg& cfg)\
+        void print(const Cfg& cfg) override\
         {\
             impl_.renderHTML(cfg, std::cout);\
         }\
+        void print(const std::string& renderFuncName, const Cfg& cfg) override\
+        {\
+            impl_.renderHTMLPart(renderFuncName, cfg, std::cout);\
+        }\
     \
-        void print(const Cfg& cfg, std::ostream& stream)\
+        void print(const Cfg& cfg, std::ostream& stream) override\
         {\
             impl_.renderHTML(cfg, stream);\
+        }\
+        void print(const std::string& renderFuncName, const Cfg& cfg, std::ostream& stream) override\
+        {\
+            impl_.renderHTMLPart(renderFuncName, cfg, stream);\
         }\
     };\
     \
@@ -144,6 +174,11 @@ std::string transpileToSharedLibRendererClass(const fs::path& filePath)
         if (node->isGlobal())
             result += node->docRenderingCode() + "\n";
 
+    for (const auto& nameFuncPair : funcMap){
+        result += "void " + nameFuncPair.first + "(const Cfg& cfg, std::ostream& out){\n";
+        result += nameFuncPair.second + "}\n";
+    }
+
     result +=
     "void Template::Impl::renderHTML(const Cfg& cfg, std::ostream& out)\n"
     "{\n";
@@ -152,6 +187,16 @@ std::string transpileToSharedLibRendererClass(const fs::path& filePath)
         if (!node->isGlobal())
             result += node->docRenderingCode();
     result += "\n}\n";
+
+    result +=
+    "void Template::Impl::renderHTMLPart(const std::string& name, const Cfg& cfg, std::ostream& out)\n"
+    "{\n";
+
+    for (const auto& nameFuncPair : funcMap){
+        result += "if (name == \"" + nameFuncPair.first + "\")\n";
+        result += nameFuncPair.first + "(cfg, out);";
+    }
+    result += "}\n";
 
     return result;
 }

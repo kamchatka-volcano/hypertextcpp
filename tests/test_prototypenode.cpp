@@ -1,7 +1,7 @@
 #include "assert_exception.h"
 #include <gtest/gtest.h>
 #include <errors.h>
-#include <macronode.h>
+#include <prototypenode.h>
 #include <tagnode.h>
 #include <streamreader.h>
 
@@ -11,7 +11,7 @@ void test(const std::string& input, const std::string& expected, const std::map<
 {
     auto stream = std::istringstream{input};
     auto streamReader = htcpp::StreamReader{stream};
-    auto tag = htcpp::MacroNode{streamReader, macrosMap};
+    auto tag = htcpp::PrototypeNode{streamReader, macrosMap};
     auto result = tag.docRenderingCode();
     EXPECT_EQ(result, expected);
 }
@@ -35,7 +35,7 @@ void test(const std::string& input, const std::string& expected, const std::map<
 TEST(MacroNode, Basic)
 {
     test("##hello_world##",
-         "Hello world!",
+         "hello_world(cfg, out);",
          {{"hello_world", "Hello world!"}});
 }
 

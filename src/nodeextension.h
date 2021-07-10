@@ -9,7 +9,7 @@ public:
     enum class Type{
         Conditional,
         Loop,
-        Macro,
+        Prototype,
         None
     };
     NodeExtension();    

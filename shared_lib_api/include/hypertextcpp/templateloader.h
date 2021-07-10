@@ -1,7 +1,10 @@
 #pragma once
 #include "itemplate.h"
+#include "templateloadingerror.h"
+#include <string>
 #include <memory>
 #include <dlfcn.h>
+
 
 namespace htcpp{
 
@@ -19,26 +22,22 @@ inline htcpp::TemplatePtr<TCfg> htcpp::loadTemplate<TCfg>(const std::string& lib
     using delete_t = void(htcpp::ITemplate<TCfg>*);\
 \
     void* templateLib = dlopen(libraryName.c_str(), RTLD_LAZY);\
-    if (!templateLib) {\
-        std::cerr << "Cannot load library: " << dlerror() << '\n';\
-        throw std::runtime_error("");\
-    }\
+    if (!templateLib)\
+        throw TemplateLoadingError{std::string{} + "Cannot load library " + libraryName + ": " + dlerror()};\
+    \
     dlerror();\
 \
     make_t* make_template = reinterpret_cast<make_t*>(dlsym(templateLib, "make"#TCfg"Template"));\
     const char* dlsym_error = dlerror();\
     if (dlsym_error) {\
-        std::cerr << "Cannot load symbol make"#TCfg"Template: " << dlsym_error << '\n';\
-        throw std::runtime_error("");\
+        throw TemplateLoadingError{std::string{} + "Cannot load symbol make"#TCfg"Template: " + dlsym_error};\
     }\
 \
     delete_t* destroy_template = reinterpret_cast<delete_t*>(dlsym(templateLib, "delete"#TCfg"Template"));\
     dlsym_error = dlerror();\
-    if (dlsym_error) {\
-        std::cerr << "Cannot load symbol delete"#TCfg"Template: " << dlsym_error << '\n';\
-        throw std::runtime_error("");\
-    }\
-\
+    if (dlsym_error)\
+        throw TemplateLoadingError{std::string{} + "Cannot load symbol delete"#TCfg"Template: " + dlsym_error};\
+    \
     return htcpp::TemplatePtr<TCfg>{make_template(), destroy_template};\
 }
 
