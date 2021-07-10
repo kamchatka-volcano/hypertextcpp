@@ -24,7 +24,6 @@ private:
     void load(StreamReader& stream, NodeReader& nodeReader);
     ReadResult readName(StreamReader& stream);
     ReadResult readAttributes(StreamReader& stream, NodeReader& nodeReader);
-    void consumeReadedText(std::vector<std::unique_ptr<IDocumentNode>>& nodes);
 
 private:    
     std::string readedText_;

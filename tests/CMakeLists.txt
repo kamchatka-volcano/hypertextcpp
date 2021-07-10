@@ -16,8 +16,7 @@ set(SRC
     ../src/nodeextension.cpp
     ../src/nodereader.cpp
     ../src/sectionnode.cpp
-    ../src/streamreader.cpp
-    ../src/string_utils.cpp
+    ../src/streamreader.cpp    
     ../src/tagnode.cpp
     ../src/textnode.cpp
     ../src/transpiler.cpp

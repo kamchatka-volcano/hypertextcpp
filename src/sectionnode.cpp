@@ -3,6 +3,7 @@
 #include "errors.h"
 #include "nodereader.h"
 #include "textnode.h"
+#include "utils.h"
 #include <gsl/assert>
 
 namespace htcpp{
@@ -28,10 +29,7 @@ void SectionNode::load(StreamReader& stream, NodeReader& nodeReader)
     while (!stream.atEnd()){
         if (stream.peek(2) == "]]"){
             stream.skip(2);
-            if (!readedText.empty()){
-                contentNodes_.emplace_back(std::make_unique<TextNode>(readedText));
-                readedText.clear();
-            }
+            utils::consumeReadedText(readedText, contentNodes_);
             const auto extensionPos = stream.positionInfo();
             const auto closingBracesExtension = readNodeExtension(stream);
             if (!closingBracesExtension.isEmpty()){
@@ -44,10 +42,7 @@ void SectionNode::load(StreamReader& stream, NodeReader& nodeReader)
         }
         auto node = nodeReader.readSectionNode(stream);
         if (node){
-            if (!readedText.empty()){
-                contentNodes_.emplace_back(std::make_unique<TextNode>(readedText));
-                readedText.clear();
-            }            
+            utils::consumeReadedText(readedText, contentNodes_, node.get());
             contentNodes_.emplace_back(std::move(node));
         }
         else

@@ -6,14 +6,14 @@
 namespace htcpp{
 
 template <typename TCfg>
-std::unique_ptr<ITemplate<TCfg>, void(*)(ITemplate<TCfg>*)> loadTemplate(const std::string&)
+inline TemplatePtr<TCfg> loadTemplate(const std::string&)
 {
     return nullptr;
 }
 
 #define HTCPP_CONFIG(TCfg)\
 template <>\
-std::unique_ptr<htcpp::ITemplate<TCfg>, void(*)(htcpp::ITemplate<TCfg>*)> htcpp::loadTemplate<TCfg>(const std::string& libraryName)\
+inline htcpp::TemplatePtr<TCfg> htcpp::loadTemplate<TCfg>(const std::string& libraryName)\
 {\
     using make_t = htcpp::ITemplate<TCfg>*();\
     using delete_t = void(htcpp::ITemplate<TCfg>*);\
@@ -39,7 +39,7 @@ std::unique_ptr<htcpp::ITemplate<TCfg>, void(*)(htcpp::ITemplate<TCfg>*)> htcpp:
         throw std::runtime_error("");\
     }\
 \
-    return std::unique_ptr<htcpp::ITemplate<TCfg>, void(*)(htcpp::ITemplate<TCfg>*)>{make_template(), destroy_template};\
+    return htcpp::TemplatePtr<TCfg>{make_template(), destroy_template};\
 }
 
 

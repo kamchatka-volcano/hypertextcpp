@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <memory>
 
 namespace htcpp{
 
@@ -10,5 +11,8 @@ public:
     virtual std::string render(const TCfg&) = 0;
     virtual void print(const TCfg&) = 0;
 };
+
+template<typename TCfg>
+using TemplatePtr = std::unique_ptr<ITemplate<TCfg>, void(*)(ITemplate<TCfg>*)>;
 
 }

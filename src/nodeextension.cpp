@@ -77,7 +77,7 @@ NodeExtension readNodeExtension(StreamReader& stream)
         else if (res == ")"){
             openParenthesisNum--;
             if (openParenthesisNum == 0){
-                if (!utils::stringHasContent(extensionContent))
+                if (utils::isBlank(extensionContent))
                     throw TemplateError{nodePos + " " + nodeExtensionName(extensionType) + " can't be empty"};
                 return {extensionType, extensionContent};
             }

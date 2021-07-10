@@ -4,10 +4,10 @@
 #include <vector>
 #include <memory>
 #include "textnode.h"
-#include "string_utils.h"
 #include "streamreader.h"
 #include "nodereader.h"
 #include "errors.h"
+#include "utils.h"
 
 namespace htcpp{
 namespace {
@@ -25,20 +25,14 @@ std::vector<std::unique_ptr<IDocumentNode>> parseTemplateFile(const fs::path& fi
     while(!stream.atEnd()){
         auto node = nodeReader.readTopLevelNode(stream);
         if (node){
-            if (!readedText.empty()){
-                nodeList.emplace_back(std::make_unique<TextNode>(readedText));
-                readedText.clear();
-            }            
+            utils::consumeReadedText(readedText, nodeList, node.get());
             nodeList.push_back(std::move(node));
         }
         else{
             readedText += stream.read();
         }
     }
-    if (!readedText.empty()){
-        nodeList.emplace_back(std::make_unique<TextNode>(readedText));
-        readedText.clear();
-    }
+    utils::consumeReadedText(readedText, nodeList);
     return nodeList;
 }
 }

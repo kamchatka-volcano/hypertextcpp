@@ -2,10 +2,10 @@
 #include "textnode.h"
 #include "streamreader.h"
 #include "nodereader.h"
-#include "string_utils.h"
 #include "errors.h"
 #include "utils.h"
 #include <gsl/assert>
+#include <sstream>
 
 namespace htcpp{
 
@@ -38,7 +38,7 @@ void TagNode::load(StreamReader& stream, NodeReader& nodeReader)
         const auto closingTag = "</" + name_ + ">";
         const auto closingTagSize = static_cast<int>(closingTag.size());
         if (stream.peek(closingTagSize) == closingTag){
-            consumeReadedText(contentNodes_);
+            utils::consumeReadedText(readedText_, contentNodes_);
             stream.skip(closingTagSize);
             const auto extensionPos = stream.positionInfo();
             const auto closingTagExtension = readNodeExtension(stream);
@@ -52,7 +52,7 @@ void TagNode::load(StreamReader& stream, NodeReader& nodeReader)
         }        
         auto node = nodeReader.readTagContentNode(stream);
         if (node){
-            consumeReadedText(contentNodes_);            
+            utils::consumeReadedText(readedText_, contentNodes_, node.get());
             contentNodes_.emplace_back(std::move(node));
         }
         else
@@ -87,7 +87,7 @@ TagNode::ReadResult TagNode::readAttributes(StreamReader& stream, NodeReader& no
 {    
     if (stream.peek() == ">"){
         attributesReaded_ = true;
-        consumeReadedText(attributeNodes_);
+        utils::consumeReadedAttributesText(readedText_, attributeNodes_);
         stream.skip(1);
         extension_ = readNodeExtension(stream);
         if (utils::isTagEmptyElement(name_))
@@ -97,22 +97,13 @@ TagNode::ReadResult TagNode::readAttributes(StreamReader& stream, NodeReader& no
 
     auto node = nodeReader.readTagAttributeNode(stream);
     if (node){
-        consumeReadedText(attributeNodes_);        
+        utils::consumeReadedAttributesText(readedText_, attributeNodes_);
         attributeNodes_.emplace_back(std::move(node));
     }
     else
         readedText_ += stream.read();
 
     return ReadResult::Ok;
-}
-
-
-void TagNode::consumeReadedText( std::vector<std::unique_ptr<IDocumentNode>>& nodes)
-{
-    if (!readedText_.empty()){
-        nodes.emplace_back(std::make_unique<TextNode>(readedText_));
-        readedText_.clear();
-    }
 }
 
 std::string TagNode::docTemplate()

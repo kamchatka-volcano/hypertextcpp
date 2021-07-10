@@ -1,8 +1,13 @@
 #include "utils.h"
 #include "streamreader.h"
 #include "errors.h"
-#include <sstream>
+#include "textnode.h"
+#include "tagnode.h"
+#include <string>
 #include <algorithm>
+#include <vector>
+#include <sstream>
+
 
 namespace htcpp::utils{
 
@@ -45,10 +50,10 @@ bool isTagEmptyElement(const std::string& tagName)
     return false;
 }
 
-bool stringHasContent(const std::string& str)
+bool isBlank(const std::string& str)
 {
     auto nonWhitespaceIt = std::find_if(str.begin(), str.end(), [](auto ch){return !std::isspace(ch);});
-    return nonWhitespaceIt != str.end();
+    return nonWhitespaceIt == str.end();
 }
 
 std::string preprocessRawStrings(const std::string& cppCode)
@@ -73,6 +78,69 @@ std::string preprocessRawStrings(const std::string& cppCode)
         throw TemplateError{"String is unclosed"};
 
     return result;
+}
+
+namespace{
+void trimFrontNewLine(std::string& str)
+{    
+    if (str.find("\n") == 0 || str.find("\r\n") == 0)
+        str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](int ch) {
+            return !std::isspace(ch);
+        }));
+}
+
+void trimLastBlankLine(std::string& str)
+{
+    auto trimFrom =
+    [&str](auto newLinePos)
+    {
+        if (newLinePos == std::string::npos)
+            return;
+        if (newLinePos > 0 && std::isspace(str[newLinePos - 1]))
+            return;
+        const auto isLastLineBlank = std::find_if(str.begin() + static_cast<int>(newLinePos), str.end(),
+                                                  [](auto ch){return !std::isspace(ch);}) == str.end();
+        if (isLastLineBlank)
+            str.resize(newLinePos);
+    };
+    trimFrom(str.rfind("\n"));
+    trimFrom(str.rfind("\r\n"));
+}
+
+}
+
+void trimBlankLines(std::string& str)
+{    
+    trimFrontNewLine(str);
+    trimLastBlankLine(str);
+}
+
+void consumeReadedAttributesText(std::string& readedText, std::vector<std::unique_ptr<IDocumentNode>>& nodes)
+{
+    if (readedText.empty())
+        return;
+
+    utils::trimBlankLines(readedText);
+    if (!readedText.empty())
+        nodes.emplace_back(std::make_unique<TextNode>(readedText));
+    readedText.clear();
+}
+
+void consumeReadedText(std::string& readedText, std::vector<std::unique_ptr<IDocumentNode>>& nodes, IDocumentNode* newNode)
+{
+    if (readedText.empty())
+        return;
+
+    if (nodes.empty() || nodes.back()->hasType<TagNode>() || (newNode && newNode->hasType<TagNode>())){
+        nodes.emplace_back(std::make_unique<TextNode>(readedText));
+        readedText.clear();
+        return;
+    }
+
+    utils::trimBlankLines(readedText);
+    if (!readedText.empty())
+        nodes.emplace_back(std::make_unique<TextNode>(readedText));
+    readedText.clear();
 }
 
 }
