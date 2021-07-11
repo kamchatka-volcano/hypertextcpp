@@ -63,7 +63,7 @@ std::string transpileToSingleHeaderRendererClass(const fs::path& filePath, const
     "class " + className + "{\n"
     "    struct Impl{\n"
     "        template<typename TCfg>\n"
-    "        void renderHTML(TCfg& cfg, std::ostream& out)\n"
+    "        void renderHTML(TCfg& cfg, std::ostream& out) const\n"
     "        {\n";
 
     for(auto& node : nodeList)
@@ -75,19 +75,19 @@ std::string transpileToSingleHeaderRendererClass(const fs::path& filePath, const
     "    } impl_;\n"
     "public:\n"
     "    template<typename TCfg>\n"
-    "    std::string render(const TCfg& cfg)\n"
+    "    std::string render(const TCfg& cfg) const\n"
     "    {\n"
     "        auto stream  = std::stringstream{};\n"
     "        impl_.renderHTML(cfg, stream);\n"
     "        return stream.str();\n"
     "    }\n"
     "    template<typename TCfg>\n"
-    "    void print(const TCfg& cfg)\n"
+    "    void print(const TCfg& cfg) const\n"
     "    {\n"
     "        impl_.renderHTML(cfg, std::cout);\n"
     "    }\n"
     "    template<typename TCfg>\n"
-    "    void print(const TCfg& cfg, std::ostream& stream)\n"
+    "    void print(const TCfg& cfg, std::ostream& stream) const\n"
     "    {\n"
     "        impl_.renderHTML(cfg, stream);\n"
     "    }\n"
@@ -109,49 +109,49 @@ std::string transpileToSharedLibRendererClass(const fs::path& filePath)
     class ITemplate{
     public:
         virtual ~ITemplate() = default;
-        virtual std::string render(const TCfg&) = 0;
-        virtual std::string render(const std::string& renderFuncName, const TCfg&) = 0;
-        virtual void print(const TCfg&) = 0;
-        virtual void print(const std::string& renderFuncName, const TCfg&) = 0;
-        virtual void print(const TCfg& cfg, std::ostream& stream) = 0;
-        virtual void print(const std::string& renderFuncName, const TCfg& cfg, std::ostream& stream) = 0;
+        virtual std::string render(const TCfg&) const = 0;
+        virtual std::string render(const std::string& renderFuncName, const TCfg&) const = 0;
+        virtual void print(const TCfg&) const = 0;
+        virtual void print(const std::string& renderFuncName, const TCfg&) const = 0;
+        virtual void print(const TCfg& cfg, std::ostream& stream) const = 0;
+        virtual void print(const std::string& renderFuncName, const TCfg& cfg, std::ostream& stream) const = 0;
     };
     }
 
     #define HTCPP_CONFIG(TCfg) using Cfg = TCfg;\
     struct Template : public htcpp::ITemplate<Cfg>{\
         struct Impl{\
-            void renderHTML(const Cfg& cfg, std::ostream& out);\
-            void renderHTMLPart(const std::string& name, const Cfg& cfg, std::ostream& out);\
+            void renderHTML(const Cfg& cfg, std::ostream& out) const;\
+            void renderHTMLPart(const std::string& name, const Cfg& cfg, std::ostream& out) const;\
         } impl_;\
     \
-        std::string render(const Cfg& cfg) override\
+        std::string render(const Cfg& cfg) const override\
         {\
-           auto stream  = std::stringstream{};\
-           impl_.renderHTML(cfg, stream);\
-          return stream.str();\
+            auto stream  = std::stringstream{};\
+            impl_.renderHTML(cfg, stream);\
+            return stream.str();\
         }\
-        std::string render(const std::string& renderFuncName, const Cfg& cfg) override\
+        std::string render(const std::string& renderFuncName, const Cfg& cfg) const override\
         {\
-           auto stream  = std::stringstream{};\
-           impl_.renderHTMLPart(renderFuncName, cfg, stream);\
-          return stream.str();\
+            auto stream  = std::stringstream{};\
+            impl_.renderHTMLPart(renderFuncName, cfg, stream);\
+            return stream.str();\
         }\
     \
-        void print(const Cfg& cfg) override\
+        void print(const Cfg& cfg) const override\
         {\
             impl_.renderHTML(cfg, std::cout);\
         }\
-        void print(const std::string& renderFuncName, const Cfg& cfg) override\
+        void print(const std::string& renderFuncName, const Cfg& cfg) const override\
         {\
             impl_.renderHTMLPart(renderFuncName, cfg, std::cout);\
         }\
     \
-        void print(const Cfg& cfg, std::ostream& stream) override\
+        void print(const Cfg& cfg, std::ostream& stream) const override\
         {\
             impl_.renderHTML(cfg, stream);\
         }\
-        void print(const std::string& renderFuncName, const Cfg& cfg, std::ostream& stream) override\
+        void print(const std::string& renderFuncName, const Cfg& cfg, std::ostream& stream) const override\
         {\
             impl_.renderHTMLPart(renderFuncName, cfg, stream);\
         }\
@@ -180,7 +180,7 @@ std::string transpileToSharedLibRendererClass(const fs::path& filePath)
     }
 
     result +=
-    "void Template::Impl::renderHTML(const Cfg& cfg, std::ostream& out)\n"
+    "void Template::Impl::renderHTML(const Cfg& cfg, std::ostream& out) const\n"
     "{\n";
 
     for(auto& node : nodeList)
@@ -189,7 +189,7 @@ std::string transpileToSharedLibRendererClass(const fs::path& filePath)
     result += "\n}\n";
 
     result +=
-    "void Template::Impl::renderHTMLPart(const std::string& name, const Cfg& cfg, std::ostream& out)\n"
+    "void Template::Impl::renderHTMLPart(const std::string& name, const Cfg& cfg, std::ostream& out) const\n"
     "{\n";
 
     for (const auto& nameFuncPair : funcMap){
