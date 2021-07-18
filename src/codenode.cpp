@@ -71,7 +71,7 @@ std::string CodeNode::docTemplate()
 
 std::string CodeNode::docRenderingCode()
 {
-    return utils::preprocessRawStrings(content_);
+    return utils::preprocessRawStrings(content_) + "\n";
 }
 
 std::string ExpressionNode::docRenderingCode()
