@@ -71,7 +71,7 @@ std::string CodeNode::docTemplate()
 
 std::string CodeNode::docRenderingCode()
 {
-    return utils::preprocessRawStrings(content_) + "\n";
+    return utils::preprocessRawStrings(content_);
 }
 
 std::string ExpressionNode::docRenderingCode()
@@ -79,13 +79,13 @@ std::string ExpressionNode::docRenderingCode()
     auto result = std::string{};
     if (!extension_.isEmpty()){
         if (extension_.type() == NodeExtension::Type::Conditional)
-            result += "if (" + extension_.content() + "){\n";
+            result += "if (" + extension_.content() + "){ ";
         else if (extension_.type() == NodeExtension::Type::Loop)
-            result += "for (" + extension_.content() + "){\n";
+            result += "for (" + extension_.content() + "){ ";
     }
     result += "out << (" + utils::preprocessRawStrings(content_) + ");";
     if (!extension_.isEmpty() && extension_.type() != NodeExtension::Type::Prototype)
-        result += "}\n";
+        result += " } ";
     return result;
 }
 

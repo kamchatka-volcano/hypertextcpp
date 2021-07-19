@@ -69,14 +69,14 @@ std::string SectionNode::docRenderingCode()
     auto result = std::string{};
     if (!extension_.isEmpty()){
         if (extension_.type() == NodeExtension::Type::Conditional)
-            result += "if (" + extension_.content() + "){\n";
+            result += "if (" + extension_.content() + "){ ";
         else if (extension_.type() == NodeExtension::Type::Loop)
-            result += "for (" + extension_.content() + "){\n";
+            result += "for (" + extension_.content() + "){ ";
     }
     for (auto& node : contentNodes_)
         result += node->docRenderingCode();
     if (!extension_.isEmpty() && extension_.type() != NodeExtension::Type::Prototype)
-        result += "}\n";
+        result += " } ";
     return result;
 }
 

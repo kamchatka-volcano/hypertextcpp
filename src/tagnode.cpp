@@ -129,9 +129,9 @@ std::string TagNode::docRenderingCode()
     auto result = std::string{};
     if (!extension_.isEmpty()){
         if (extension_.type() == NodeExtension::Type::Conditional)
-            result += "if (" + extension_.content() + "){\n";
+            result += "if (" + extension_.content() + "){ ";
         else if (extension_.type() == NodeExtension::Type::Loop)
-            result += "for (" + extension_.content() + "){\n";
+            result += "for (" + extension_.content() + "){ ";
     }
     result  += "out << \"<" + name_ + "\";";
     for (auto& node : attributeNodes_)
@@ -141,9 +141,9 @@ std::string TagNode::docRenderingCode()
     for (auto& node : contentNodes_)
         result += node->docRenderingCode();
     if (!utils::isTagEmptyElement(name_))
-        result += "out << \"</" + name_ + ">\";\n";
+        result += "out << \"</" + name_ + ">\";";
     if (!extension_.isEmpty() && extension_.type() != NodeExtension::Type::Prototype)
-        result += "}\n";
+        result += " } ";
 
     return result;
 }
