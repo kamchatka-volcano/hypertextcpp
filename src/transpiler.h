@@ -14,19 +14,22 @@ class StreamReader;
 class Transpiler{
 public:
     Transpiler();
-    ~Transpiler();
-    std::string transpileToSingleHeaderRendererClass(const fs::path& filePath,
-                                                    const std::string& className);
-    std::string transpileToSharedLibRendererClass(const fs::path& filePath);
+    virtual ~Transpiler();
+    std::string process(const fs::path& filePath);
 
 private:
     bool readNode(StreamReader& stream);
     void parseTemplateFile(const fs::path& filePath);
+    virtual std::string generateCode() const = 0;
 
-private:
-    std::string readedText_;
+protected:
     std::vector<std::unique_ptr<IDocumentNode>> nodeList_;
     std::vector<std::unique_ptr<GlobalStatementNode>> globalStatementList_;
     std::vector<std::unique_ptr<ProcedureNode>> procedureList_;
+
+private:
+    std::string readText_;
+
 };
+
 }

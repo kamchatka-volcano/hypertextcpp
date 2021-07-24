@@ -18,9 +18,9 @@ std::string nodeExtensionName(NodeExtension::Type type)
 
 NodeExtension::NodeExtension() = default;
 NodeExtension::NodeExtension(NodeExtension::Type type,
-                             const std::string& content)
+                             std::string content)
     : type_(type)
-    , content_(content)
+    , content_(std::move(content))
 {    
 }
 

@@ -6,7 +6,7 @@ namespace htcpp{
 
 class StreamReader{
 public:
-    StreamReader(std::istream& stream, int firstLine = 0, int firstColumn = 0);
+    explicit StreamReader(std::istream& stream, int firstLine = 0, int firstColumn = 0);
     StreamReader(StreamReader&&) = default;
     StreamReader(const StreamReader&) = delete;
     StreamReader& operator=(const StreamReader&) = delete;

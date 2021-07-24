@@ -29,7 +29,7 @@ void SectionNode::load(StreamReader& stream)
     while (!stream.atEnd()){
         if (stream.peek(2) == "]]"){
             stream.skip(2);
-            utils::consumeReadedText(readedText, contentNodes_);
+            utils::consumeReadText(readedText, contentNodes_);
             const auto extensionPos = stream.positionInfo();
             const auto closingBracesExtension = readNodeExtension(stream);
             if (!closingBracesExtension.isEmpty()){
@@ -42,7 +42,7 @@ void SectionNode::load(StreamReader& stream)
         }
         auto node = readNonTagNode(stream);
         if (node){
-            utils::consumeReadedText(readedText, contentNodes_, node.get());
+            utils::consumeReadText(readedText, contentNodes_, node.get());
             contentNodes_.emplace_back(std::move(node));
         }
         else

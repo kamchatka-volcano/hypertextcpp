@@ -5,7 +5,7 @@ namespace htcpp{
 
 class TextNode: public IDocumentNode{
 public:
-    TextNode(const std::string& value);
+    explicit TextNode(std::string value);
     std::string docTemplate() override;
     std::string docRenderingCode() override;    
 

@@ -6,7 +6,7 @@ namespace htcpp{
 
 class CodeNode : public IDocumentNode{
 public:
-    CodeNode(const std::string& name,
+    CodeNode(std::string name,
              char idToken,
              char openToken,
              char closeToken,
@@ -32,7 +32,7 @@ private:
 class ExpressionNode : public CodeNode
 {
 public:
-    ExpressionNode(StreamReader& stream) :
+    explicit ExpressionNode(StreamReader& stream) :
         CodeNode("Expression ", '$', '(', ')', stream)
     {}
     std::string docRenderingCode() override;
@@ -41,7 +41,7 @@ public:
 class RenderStatementNode : public CodeNode
 {
 public:
-    RenderStatementNode(StreamReader& stream) :
+    explicit RenderStatementNode(StreamReader& stream) :
         CodeNode("Render statement", '$', '{', '}', stream)
     {}    
 };
@@ -49,7 +49,7 @@ public:
 class GlobalStatementNode : public CodeNode
 {
 public:
-    GlobalStatementNode(StreamReader& stream) :
+    explicit GlobalStatementNode(StreamReader& stream) :
         CodeNode("Global statement", '#', '{', '}', stream)
     {}
 };

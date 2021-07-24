@@ -2,16 +2,17 @@
 #include "streamreader.h"
 #include "errors.h"
 #include "utils.h"
+#include <utility>
 #include <gsl/assert>
 
 namespace htcpp{
 
-CodeNode::CodeNode(const std::string& name,
+CodeNode::CodeNode(std::string name,
                    char idToken,
                    char openToken,
                    char closeToken,                   
                    StreamReader& stream)
-    : name_(name)
+    : name_(std::move(name))
     , idToken_(idToken)
     , openToken_(openToken)
     , closeToken_(closeToken)    

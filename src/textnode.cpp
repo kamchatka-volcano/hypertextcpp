@@ -2,8 +2,8 @@
 
 namespace htcpp{
 
-TextNode::TextNode(const std::string& value)
-    : value_(value)
+TextNode::TextNode(std::string value)
+    : value_(std::move(value))
 {
 }
 

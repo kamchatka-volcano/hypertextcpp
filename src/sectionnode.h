@@ -10,7 +10,7 @@ class NodeReader;
 class SectionNode : public IDocumentNode
 {
 public:
-    SectionNode(StreamReader& stream);
+    explicit SectionNode(StreamReader& stream);
     std::string docTemplate() override;
     std::string docRenderingCode() override;
     const NodeExtension& extension() const;

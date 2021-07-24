@@ -25,7 +25,9 @@ set(SRC
     src/tagnode.cpp
     src/textnode.cpp
     src/transpiler.cpp
-    src/utils.cpp)
+    src/utils.cpp
+    src/singleheadertranspiler.cpp
+    src/sharedlibtranspiler.cpp)
     
 add_executable(hypertextcpp ${SRC})
 target_include_directories(hypertextcpp PRIVATE lib/cmdlime/include)

@@ -38,7 +38,7 @@ void TagNode::load(StreamReader& stream)
         const auto closingTag = "</" + name_ + ">";
         const auto closingTagSize = static_cast<int>(closingTag.size());
         if (stream.peek(closingTagSize) == closingTag){
-            utils::consumeReadedText(readedText_, contentNodes_);
+            utils::consumeReadText(readedText_, contentNodes_);
             stream.skip(closingTagSize);
             const auto extensionPos = stream.positionInfo();
             const auto closingTagExtension = readNodeExtension(stream);
@@ -52,7 +52,7 @@ void TagNode::load(StreamReader& stream)
         }        
         auto node = readTagContentNode(stream);
         if (node){
-            utils::consumeReadedText(readedText_, contentNodes_, node.get());
+            utils::consumeReadText(readedText_, contentNodes_, node.get());
             contentNodes_.emplace_back(std::move(node));
         }
         else
@@ -87,7 +87,7 @@ TagNode::ReadResult TagNode::readAttributes(StreamReader& stream)
 {    
     if (stream.peek() == ">"){
         attributesReaded_ = true;
-        utils::consumeReadedAttributesText(readedText_, attributeNodes_);
+        utils::consumeReadAttributesText(readedText_, attributeNodes_);
         stream.skip(1);
         extension_ = readNodeExtension(stream);
         if (utils::isTagEmptyElement(name_))
@@ -97,7 +97,7 @@ TagNode::ReadResult TagNode::readAttributes(StreamReader& stream)
 
     auto node = readTagAttributeNode(stream);
     if (node){
-        utils::consumeReadedAttributesText(readedText_, attributeNodes_);
+        utils::consumeReadAttributesText(readedText_, attributeNodes_);
         attributeNodes_.emplace_back(std::move(node));
     }
     else

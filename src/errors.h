@@ -6,7 +6,7 @@ namespace htcpp{
 
 class Error : public std::runtime_error{
 public:
-    Error(const std::string& errorMsg)
+    explicit Error(const std::string& errorMsg)
         : std::runtime_error(errorMsg)
     {}
 };

@@ -83,7 +83,7 @@ std::string preprocessRawStrings(const std::string& cppCode)
 namespace{
 void trimFrontNewLine(std::string& str)
 {    
-    if (str.find("\n") == 0 || str.find("\r\n") == 0)
+    if (str.find('\n') == 0 || str.find("\r\n") == 0)
         str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](int ch) {
             return !std::isspace(ch);
         }));
@@ -103,7 +103,7 @@ void trimLastBlankLine(std::string& str)
         if (isLastLineBlank)
             str.resize(newLinePos);
     };
-    trimFrom(str.rfind("\n"));
+    trimFrom(str.rfind('\n'));
     trimFrom(str.rfind("\r\n"));
 }
 
@@ -115,32 +115,32 @@ void trimBlankLines(std::string& str)
     trimLastBlankLine(str);
 }
 
-void consumeReadedAttributesText(std::string& readedText, std::vector<std::unique_ptr<IDocumentNode>>& nodes)
+void consumeReadAttributesText(std::string& readText, std::vector<std::unique_ptr<IDocumentNode>>& nodes)
 {
-    if (readedText.empty())
+    if (readText.empty())
         return;
 
-    utils::trimBlankLines(readedText);
-    if (!readedText.empty())
-        nodes.emplace_back(std::make_unique<TextNode>(readedText));
-    readedText.clear();
+    utils::trimBlankLines(readText);
+    if (!readText.empty())
+        nodes.emplace_back(std::make_unique<TextNode>(readText));
+    readText.clear();
 }
 
-void consumeReadedText(std::string& readedText, std::vector<std::unique_ptr<IDocumentNode>>& nodes, IDocumentNode* newNode)
+void consumeReadText(std::string& readText, std::vector<std::unique_ptr<IDocumentNode>>& nodes, IDocumentNode* newNode)
 {
-    if (readedText.empty())
+    if (readText.empty())
         return;
 
     if (nodes.empty() || nodes.back()->hasType<TagNode>() || (newNode && newNode->hasType<TagNode>())){
-        nodes.emplace_back(std::make_unique<TextNode>(readedText));
-        readedText.clear();
+        nodes.emplace_back(std::make_unique<TextNode>(readText));
+        readText.clear();
         return;
     }
 
-    utils::trimBlankLines(readedText);
-    if (!readedText.empty())
-        nodes.emplace_back(std::make_unique<TextNode>(readedText));
-    readedText.clear();
+    utils::trimBlankLines(readText);
+    if (!readText.empty())
+        nodes.emplace_back(std::make_unique<TextNode>(readText));
+    readText.clear();
 }
 
 }

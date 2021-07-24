@@ -14,6 +14,6 @@ std::string preprocessRawStrings(const std::string& cppCode);
 bool isBlank(const std::string& str);
 void trimBlankLines(std::string& str);
 
-void consumeReadedAttributesText(std::string& readedText, std::vector<std::unique_ptr<IDocumentNode>>& nodes);
-void consumeReadedText(std::string& readedText, std::vector<std::unique_ptr<IDocumentNode>>& nodes, IDocumentNode* newNode = nullptr);
+void consumeReadAttributesText(std::string& readText, std::vector<std::unique_ptr<IDocumentNode>>& nodes);
+void consumeReadText(std::string& readText, std::vector<std::unique_ptr<IDocumentNode>>& nodes, IDocumentNode* newNode = nullptr);
 }

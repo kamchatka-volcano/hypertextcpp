@@ -1,4 +1,5 @@
-#include "transpiler.h"
+#include "singleheadertranspiler.h"
+#include "sharedlibtranspiler.h"
 #include "errors.h"
 #include "nameutils.h"
 #include <cmdlime/config.h>
@@ -7,6 +8,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <memory>
 
 namespace fs = std::filesystem;
 
@@ -22,6 +24,7 @@ struct Cfg : public cmdlime::Config{
 };
 fs::path getOutputFilePath(const Cfg& cfg);
 std::string getClassName(const Cfg& cfg);
+std::unique_ptr<htcpp::Transpiler> makeTranspiler(const Cfg& cfg);
 }
 
 int main(int argc, char**argv)
@@ -32,12 +35,9 @@ int main(int argc, char**argv)
         return cfgReader.exitCode();
 
     auto result = std::string{};
-    auto transpiler = htcpp::Transpiler{};
+    auto transpiler = makeTranspiler(cfg);
     try{
-        if (cfg.sharedLib)
-            result = transpiler.transpileToSharedLibRendererClass(cfg.input);
-        else
-            result = transpiler.transpileToSingleHeaderRendererClass(cfg.input, getClassName(cfg));
+        result = transpiler->process(cfg.input);
     }
     catch(const htcpp::Error& e)
     {
@@ -83,6 +83,14 @@ std::string getClassName(const Cfg& cfg)
             result = htcpp::utils::toLowerCase(result);
     }
     return result;
+}
+
+std::unique_ptr<htcpp::Transpiler> makeTranspiler(const Cfg& cfg)
+{
+    if (cfg.sharedLib)
+        return std::make_unique<htcpp::SharedLibTranspiler>();
+    else
+        return std::make_unique<htcpp::SingleHeaderTranspiler>(getClassName(cfg));
 }
 
 }

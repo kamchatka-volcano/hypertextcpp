@@ -15,7 +15,7 @@ class TagNode : public IDocumentNode
     };
 
 public:
-    TagNode(StreamReader& stream);
+    explicit TagNode(StreamReader& stream);
     std::string docTemplate() override;
     std::string docRenderingCode() override;
     const NodeExtension& extension() const;

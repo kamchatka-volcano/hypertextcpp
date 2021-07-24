@@ -11,7 +11,7 @@ public:
         Loop,        
         None
     };
-    NodeExtension();    
+    NodeExtension();
     std::string docTemplate() const;
     bool isEmpty() const;
 
@@ -20,7 +20,7 @@ public:
 
 private:
     NodeExtension(Type type,
-                  const std::string& content);
+                  std::string content);
 
 private:
     Type type_ = Type::None;

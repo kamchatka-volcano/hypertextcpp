@@ -28,12 +28,12 @@ void ProcedureNode::load(StreamReader& stream)
     while (!stream.atEnd()){
         if (stream.peek() == "}"){
             stream.skip(1);
-            utils::consumeReadedText(readedText, contentNodes_);
+            utils::consumeReadText(readedText, contentNodes_);
             return;
         }
         auto node = readNonTagNode(stream);
         if (node){
-            utils::consumeReadedText(readedText, contentNodes_, node.get());
+            utils::consumeReadText(readedText, contentNodes_, node.get());
             contentNodes_.emplace_back(std::move(node));
         }
         else
