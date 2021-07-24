@@ -1,18 +1,20 @@
 #include "assert_exception.h"
 #include <gtest/gtest.h>
 #include <errors.h>
-#include <prototypenode.h>
+#include <procedurenode.h>
 #include <tagnode.h>
 #include <streamreader.h>
+#include <nodereader.h>
 
 namespace{
 
-void test(const std::string& input, const std::string& expected, const std::map<std::string, std::string>& macrosMap)
+void test(const std::string& name, const std::string& input, const std::string& expected)
 {
     auto stream = std::istringstream{input};
     auto streamReader = htcpp::StreamReader{stream};
-    auto tag = htcpp::PrototypeNode{streamReader, macrosMap};
-    auto result = tag.docRenderingCode();
+    //auto tag = htcpp::ProcedureNode{name, streamReader};
+    auto procedure = readProcedure(streamReader);
+    auto result = procedure->docRenderingCode();
     EXPECT_EQ(result, expected);
 }
 
@@ -32,11 +34,11 @@ void test(const std::string& input, const std::string& expected, const std::map<
 
 }
 
-TEST(MacroNode, Basic)
+TEST(ProcedureNode, Basic)
 {
-    test("##hello_world##",
-         "hello_world(cfg, out);",
-         {{"hello_world", "Hello world!"}});
+    test("hello_world",
+         "#hello_world(){ <p>Hello World! </p> }",
+         "out << R\"( )\";out << \"<p\";out << \">\";out << R\"(Hello World! )\";out << \"</p>\";out << R\"( )\";");
 }
 
 

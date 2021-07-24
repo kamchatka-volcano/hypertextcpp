@@ -9,9 +9,9 @@
 
 namespace htcpp{
 
-TagNode::TagNode(StreamReader& stream, NodeReader& nodeReader)
+TagNode::TagNode(StreamReader& stream)
 {
-    load(stream, nodeReader);
+    load(stream);
 }
 
 const NodeExtension& TagNode::extension() const
@@ -19,7 +19,7 @@ const NodeExtension& TagNode::extension() const
     return extension_;
 }
 
-void TagNode::load(StreamReader& stream, NodeReader& nodeReader)
+void TagNode::load(StreamReader& stream)
 {        
     const auto nodePos = stream.positionInfo();
     Expects(stream.read() == "<");
@@ -31,7 +31,7 @@ void TagNode::load(StreamReader& stream, NodeReader& nodeReader)
             continue;
         }
         if (!attributesReaded_){
-            if (readAttributes(stream, nodeReader) == ReadResult::ParsingCompleted)
+            if (readAttributes(stream) == ReadResult::ParsingCompleted)
                 return;
             continue;
         }
@@ -50,7 +50,7 @@ void TagNode::load(StreamReader& stream, NodeReader& nodeReader)
             }
             return;
         }        
-        auto node = nodeReader.readTagContentNode(stream);
+        auto node = readTagContentNode(stream);
         if (node){
             utils::consumeReadedText(readedText_, contentNodes_, node.get());
             contentNodes_.emplace_back(std::move(node));
@@ -83,7 +83,7 @@ TagNode::ReadResult TagNode::readName(StreamReader& stream)
     return ReadResult::Ok;
 }
 
-TagNode::ReadResult TagNode::readAttributes(StreamReader& stream, NodeReader& nodeReader)
+TagNode::ReadResult TagNode::readAttributes(StreamReader& stream)
 {    
     if (stream.peek() == ">"){
         attributesReaded_ = true;
@@ -95,7 +95,7 @@ TagNode::ReadResult TagNode::readAttributes(StreamReader& stream, NodeReader& no
         return ReadResult::Ok;
     }
 
-    auto node = nodeReader.readTagAttributeNode(stream);
+    auto node = readTagAttributeNode(stream);
     if (node){
         utils::consumeReadedAttributesText(readedText_, attributeNodes_);
         attributeNodes_.emplace_back(std::move(node));
@@ -142,7 +142,7 @@ std::string TagNode::docRenderingCode()
         result += node->docRenderingCode();
     if (!utils::isTagEmptyElement(name_))
         result += "out << \"</" + name_ + ">\";";
-    if (!extension_.isEmpty() && extension_.type() != NodeExtension::Type::Prototype)
+    if (!extension_.isEmpty())
         result += " } ";
 
     return result;

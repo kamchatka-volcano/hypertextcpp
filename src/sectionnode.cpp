@@ -8,9 +8,9 @@
 
 namespace htcpp{
 
-SectionNode::SectionNode(StreamReader& stream, NodeReader& nodeReader)
+SectionNode::SectionNode(StreamReader& stream)
 {
-    load(stream, nodeReader);
+    load(stream);
 }
 
 const NodeExtension& SectionNode::extension() const
@@ -18,7 +18,7 @@ const NodeExtension& SectionNode::extension() const
     return extension_;
 }
 
-void SectionNode::load(StreamReader& stream, NodeReader& nodeReader)
+void SectionNode::load(StreamReader& stream)
 {
     const auto nodePos = stream.positionInfo();
     Expects(stream.read(2) == "[[");
@@ -40,7 +40,7 @@ void SectionNode::load(StreamReader& stream, NodeReader& nodeReader)
             }
             return;
         }
-        auto node = nodeReader.readSectionNode(stream);
+        auto node = readNonTagNode(stream);
         if (node){
             utils::consumeReadedText(readedText, contentNodes_, node.get());
             contentNodes_.emplace_back(std::move(node));
@@ -75,7 +75,7 @@ std::string SectionNode::docRenderingCode()
     }
     for (auto& node : contentNodes_)
         result += node->docRenderingCode();
-    if (!extension_.isEmpty() && extension_.type() != NodeExtension::Type::Prototype)
+    if (!extension_.isEmpty())
         result += " } ";
     return result;
 }

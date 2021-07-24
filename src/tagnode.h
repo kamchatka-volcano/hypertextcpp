@@ -15,15 +15,15 @@ class TagNode : public IDocumentNode
     };
 
 public:
-    TagNode(StreamReader& stream, NodeReader& nodeReader);
+    TagNode(StreamReader& stream);
     std::string docTemplate() override;
     std::string docRenderingCode() override;
     const NodeExtension& extension() const;
 
 private:
-    void load(StreamReader& stream, NodeReader& nodeReader);
+    void load(StreamReader& stream);
     ReadResult readName(StreamReader& stream);
-    ReadResult readAttributes(StreamReader& stream, NodeReader& nodeReader);
+    ReadResult readAttributes(StreamReader& stream);
 
 private:    
     std::string readedText_;

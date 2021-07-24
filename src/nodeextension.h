@@ -8,8 +8,7 @@ class NodeExtension{
 public:
     enum class Type{
         Conditional,
-        Loop,
-        Prototype,
+        Loop,        
         None
     };
     NodeExtension();    

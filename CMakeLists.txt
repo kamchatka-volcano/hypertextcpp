@@ -16,7 +16,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(SRC
     src/codenode.cpp
     src/main.cpp
-    src/prototypenode.cpp
+    src/procedurenode.cpp
     src/nameutils.cpp
     src/nodeextension.cpp
     src/nodereader.cpp

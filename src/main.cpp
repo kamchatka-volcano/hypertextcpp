@@ -32,11 +32,12 @@ int main(int argc, char**argv)
         return cfgReader.exitCode();
 
     auto result = std::string{};
+    auto transpiler = htcpp::Transpiler{};
     try{
         if (cfg.sharedLib)
-            result = htcpp::transpileToSharedLibRendererClass(cfg.input);
+            result = transpiler.transpileToSharedLibRendererClass(cfg.input);
         else
-            result = htcpp::transpileToSingleHeaderRendererClass(cfg.input, getClassName(cfg));
+            result = transpiler.transpileToSingleHeaderRendererClass(cfg.input, getClassName(cfg));
     }
     catch(const htcpp::Error& e)
     {
@@ -76,9 +77,9 @@ std::string getClassName(const Cfg& cfg)
         result = cfg.input.stem();
         if (cfg.classPascalcase)
             result = htcpp::utils::toPascalCase(result);
-        else if (cfg.classSnakecase)
+        if (cfg.classSnakecase)
             result = htcpp::utils::toSnakeCase(result);
-        else if (cfg.classLowercase)
+        if (cfg.classLowercase)
             result = htcpp::utils::toLowerCase(result);
     }
     return result;

@@ -1,27 +1,29 @@
 #pragma once
 #include "idocumentnode.h"
-#include "nodeextension.h"
+#include <string>
 #include <vector>
 #include <memory>
 
 namespace htcpp{
-class NodeReader;
+class StreamReader;
 
-class SectionNode : public IDocumentNode
+class ProcedureNode : public IDocumentNode
 {
 public:
-    SectionNode(StreamReader& stream);
+    ProcedureNode(const std::string& procedureName, StreamReader& stream);
+    const std::string& name() const;
+
     std::string docTemplate() override;
     std::string docRenderingCode() override;
-    const NodeExtension& extension() const;
+
 
 private:
     void load(StreamReader& stream);
 
 private:
+    std::string procedureName_;
     std::vector<std::unique_ptr<IDocumentNode>> contentNodes_;
-    NodeExtension extension_;
-    bool extensionIsOnClosingBraces_ = false;
 };
 
 }
+

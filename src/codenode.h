@@ -10,11 +10,9 @@ public:
              char idToken,
              char openToken,
              char closeToken,
-             bool isGlobal,
              StreamReader& stream);
     std::string docTemplate() override;
-    std::string docRenderingCode() override;
-    bool isGlobal() override;
+    std::string docRenderingCode() override;    
 
 protected:
     std::string content_;
@@ -27,8 +25,7 @@ private:
     std::string name_;
     char idToken_;
     char openToken_;
-    char closeToken_;
-    bool isGlobal_;
+    char closeToken_;    
     bool extensionIsOnClosingToken_ = false;
 };
 
@@ -36,7 +33,7 @@ class ExpressionNode : public CodeNode
 {
 public:
     ExpressionNode(StreamReader& stream) :
-        CodeNode("Expression ", '$', '(', ')', false, stream)
+        CodeNode("Expression ", '$', '(', ')', stream)
     {}
     std::string docRenderingCode() override;
 };
@@ -45,7 +42,7 @@ class RenderStatementNode : public CodeNode
 {
 public:
     RenderStatementNode(StreamReader& stream) :
-        CodeNode("Render statement", '$', '{', '}', false, stream)
+        CodeNode("Render statement", '$', '{', '}', stream)
     {}    
 };
 
@@ -53,7 +50,7 @@ class GlobalStatementNode : public CodeNode
 {
 public:
     GlobalStatementNode(StreamReader& stream) :
-        CodeNode("Global statement", '#', '{', '}', true, stream)
+        CodeNode("Global statement", '#', '{', '}', stream)
     {}
 };
 

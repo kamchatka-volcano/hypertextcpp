@@ -5,13 +5,13 @@ include_directories(${GTEST_INCLUDE_DIRS}, ..)
 
 set(SRC
     test_codenode.cpp
-    test_prototypenode.cpp
+    test_procedurenode.cpp
     test_nameutils.cpp
     test_sectionnode.cpp
     test_tagnode.cpp
     test_utils.cpp
     ../src/codenode.cpp
-    ../src/prototypenode.cpp
+    ../src/procedurenode.cpp
     ../src/nameutils.cpp
     ../src/nodeextension.cpp
     ../src/nodereader.cpp

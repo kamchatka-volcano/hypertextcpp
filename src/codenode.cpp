@@ -9,14 +9,12 @@ namespace htcpp{
 CodeNode::CodeNode(const std::string& name,
                    char idToken,
                    char openToken,
-                   char closeToken,
-                   bool isGlobal,
+                   char closeToken,                   
                    StreamReader& stream)
     : name_(name)
     , idToken_(idToken)
     , openToken_(openToken)
-    , closeToken_(closeToken)
-    , isGlobal_(isGlobal)
+    , closeToken_(closeToken)    
 {
     load(stream);
 }
@@ -84,14 +82,9 @@ std::string ExpressionNode::docRenderingCode()
             result += "for (" + extension_.content() + "){ ";
     }
     result += "out << (" + utils::preprocessRawStrings(content_) + ");";
-    if (!extension_.isEmpty() && extension_.type() != NodeExtension::Type::Prototype)
+    if (!extension_.isEmpty())
         result += " } ";
     return result;
-}
-
-bool CodeNode::isGlobal()
-{
-    return isGlobal_;
 }
 
 }

@@ -1,9 +1,11 @@
 #include "transpiler.h"
 #include "textnode.h"
+#include "procedurenode.h"
 #include "streamreader.h"
 #include "nodereader.h"
 #include "errors.h"
 #include "utils.h"
+#include "codenode.h"
 #include <sstream>
 #include <fstream>
 #include <vector>
@@ -12,51 +14,64 @@
 #include <tuple>
 
 namespace htcpp{
-namespace {
+Transpiler::Transpiler() = default;
+Transpiler::~Transpiler() = default;
 
-std::tuple<std::vector<std::unique_ptr<IDocumentNode>>,
-           std::map<std::string, std::string>> parseTemplateFile(const fs::path& filePath)
-{
-    auto nodeList = std::vector<std::unique_ptr<IDocumentNode>>{};
+void Transpiler::parseTemplateFile(const fs::path& filePath)
+{    
     auto fileStream = std::ifstream{filePath};
     if (!fileStream.is_open())
         throw ParsingError("Can't open file " + filePath.string());
 
     auto stream = StreamReader{fileStream};
-    auto prototypeFuncMap = std::map<std::string, std::string>{};
-    auto nodeReader = NodeReader{prototypeFuncMap};
-    auto readedText = std::string{};
+    auto prototypeFuncMap = std::map<std::string, std::string>{};        
 
-    while(!stream.atEnd()){
-        auto node = nodeReader.readTopLevelNode(stream);
-        if (node){
-            utils::consumeReadedText(readedText, nodeList, node.get());
-            nodeList.push_back(std::move(node));
-        }
-        else{
-            readedText += stream.read();
-        }
-    }
-    utils::consumeReadedText(readedText, nodeList);
-    return {std::move(nodeList), prototypeFuncMap};
-}
+    while(!stream.atEnd())
+        if (!readNode(stream))
+            readedText_ += stream.read();
+
+    utils::consumeReadedText(readedText_, nodeList_);
 }
 
-std::string transpileToSingleHeaderRendererClass(const fs::path& filePath, const std::string& className)
+bool Transpiler::readNode(StreamReader& stream)
 {
-    const auto [nodeList, funcMap] = parseTemplateFile(filePath);
+    auto node = readNonTagNode(stream);
+    if (node){
+        utils::consumeReadedText(readedText_, nodeList_, node.get());
+        nodeList_.push_back(std::move(node));
+        return true;
+    }
+    auto globalStatement = readGlobalStatement(stream);
+    if (globalStatement){
+        utils::consumeReadedText(readedText_, nodeList_);
+        globalStatementList_.push_back(std::move(globalStatement));
+        return true;
+    }
+    auto procedure = readProcedure(stream);
+    if (procedure){
+        utils::consumeReadedText(readedText_, nodeList_);
+        procedureList_.push_back(std::move(procedure));
+        return true;
+    }
+    return false;
+}
+
+std::string Transpiler::transpileToSingleHeaderRendererClass(const fs::path& filePath, const std::string& className)
+{
+    parseTemplateFile(filePath);
     auto result = std::string{};
     result +=
     "#include <iostream>\n"
     "#include <sstream>\n";
-    for(auto& node : nodeList)
-        if (node->isGlobal())
-            result += node->docRenderingCode() + "\n";
+    for(const auto& globalStatement : globalStatementList_)
+        result += globalStatement->docRenderingCode() + "\n";
 
-    for (const auto& nameFuncPair : funcMap){
+    for (const auto& procedure : procedureList_){
+        result += "namespace {\n";
         result += "template <typename TCfg>\n";
-        result += nameFuncPair.first + "(const TCfg& cfg, std::ostream& out){\n";
-        result += nameFuncPair.second + "}\n";
+        result += "void " + procedure->name() + "(const TCfg& cfg, std::ostream& out){\n";
+        result += procedure->docRenderingCode() + "\n}\n";
+        result += "}\n";
     }
 
     result +=
@@ -66,9 +81,11 @@ std::string transpileToSingleHeaderRendererClass(const fs::path& filePath, const
     "        void renderHTML(TCfg& cfg, std::ostream& out) const\n"
     "        {\n";
 
-    for(auto& node : nodeList)
-        if (!node->isGlobal())
-            result += node->docRenderingCode();
+    for (const auto& procedure : procedureList_)
+        result += "auto " + procedure->name() + " = [&cfg, &out]{ ::" + procedure->name() + "(cfg, out); return std::string{};};\n";
+
+    for(const auto& node : nodeList_)
+        result += node->docRenderingCode();
 
     result +=
     "        }\n"
@@ -96,9 +113,9 @@ std::string transpileToSingleHeaderRendererClass(const fs::path& filePath, const
     return result;
 }
 
-std::string transpileToSharedLibRendererClass(const fs::path& filePath)
+std::string Transpiler::transpileToSharedLibRendererClass(const fs::path& filePath)
 {
-    const auto [nodeList, funcMap] = parseTemplateFile(filePath);
+    parseTemplateFile(filePath);
     auto result = std::string{R"(
     #include <string>
     #include <iostream>
@@ -170,31 +187,34 @@ std::string transpileToSharedLibRendererClass(const fs::path& filePath)
     }\
 
     )"};
-    for(auto& node : nodeList)
-        if (node->isGlobal())
-            result += node->docRenderingCode() + "\n";
+    for(const auto& globalStatement : globalStatementList_)
+        result += globalStatement->docRenderingCode() + "\n";
 
-    for (const auto& nameFuncPair : funcMap){
-        result += "void " + nameFuncPair.first + "(const Cfg& cfg, std::ostream& out){\n";
-        result += nameFuncPair.second + "}\n";
+    result += "namespace {\n";
+    for (const auto& procedure : procedureList_){
+        result += "void " + procedure->name() + "(const Cfg& cfg, std::ostream& out){\n";
+        result += procedure->docRenderingCode() + "\n}\n";
     }
+    result += "\n}\n";
+
 
     result +=
     "void Template::Impl::renderHTML(const Cfg& cfg, std::ostream& out) const\n"
     "{\n";
+    for (const auto& procedure : procedureList_)
+        result += "auto " + procedure->name() + " = [&cfg, &out]{::" + procedure->name() + "(cfg, out); return std::string{};};\n";
 
-    for(auto& node : nodeList)
-        if (!node->isGlobal())
-            result += node->docRenderingCode();
+    for(auto& node : nodeList_)
+        result += node->docRenderingCode();
     result += "\n}\n";
 
     result +=
     "void Template::Impl::renderHTMLPart(const std::string& name, const Cfg& cfg, std::ostream& out) const\n"
     "{\n";
 
-    for (const auto& nameFuncPair : funcMap){
-        result += "if (name == \"" + nameFuncPair.first + "\")\n";
-        result += nameFuncPair.first + "(cfg, out);";
+    for (const auto& procedure : procedureList_){
+        result += "if (name == \"" + procedure->name() + "\")\n";
+        result += procedure->name() + "(cfg, out);";
     }
     result += "}\n";
 
