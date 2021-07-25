@@ -20,51 +20,39 @@ const NodeExtension& SectionNode::extension() const
 
 void SectionNode::load(StreamReader& stream)
 {
-    const auto nodePos = stream.positionInfo();
+    const auto nodePos = stream.position();
     Expects(stream.read(2) == "[[");
 
     extension_ = readNodeExtension(stream);
 
-    auto readedText = std::string{};
+    auto readText = std::string{};
     while (!stream.atEnd()){
         if (stream.peek(2) == "]]"){
             stream.skip(2);
-            utils::consumeReadText(readedText, contentNodes_);
-            const auto extensionPos = stream.positionInfo();
+            utils::consumeReadText(readText, contentNodes_);
+            const auto extensionPos = stream.position();
             const auto closingBracesExtension = readNodeExtension(stream);
             if (!closingBracesExtension.isEmpty()){
                 if (!extension_.isEmpty())
-                    throw TemplateError{extensionPos + " section can't have multiple extensions"};
+                    throw TemplateError{extensionPos, "Section can't have multiple extensions"};
                 extension_ = closingBracesExtension;
-                extensionIsOnClosingBraces_ = true;
             }
+            if (contentNodes_.empty())
+                throw TemplateError{nodePos, "Section can't be empty"};
             return;
         }
         auto node = readNonTagNode(stream);
         if (node){
-            utils::consumeReadText(readedText, contentNodes_, node.get());
+            utils::consumeReadText(readText, contentNodes_, node.get());
             contentNodes_.emplace_back(std::move(node));
         }
         else
-            readedText += stream.read();
+            readText += stream.read();
     }
-    throw TemplateError{nodePos + " section isn't closed with ']]'"};
+    throw TemplateError{nodePos, "Section isn't closed with ']]'"};
 }
 
-std::string SectionNode::docTemplate()
-{
-    auto result = std::string{"[["};
-    if (!extensionIsOnClosingBraces_)
-        result += extension_.docTemplate();
-    for (auto& node : contentNodes_)
-        result += node->docTemplate();
-    result += "]]";
-    if (extensionIsOnClosingBraces_)
-        result += extension_.docTemplate();
-    return result;
-}
-
-std::string SectionNode::docRenderingCode()
+std::string SectionNode::renderingCode()
 {
     auto result = std::string{};
     if (!extension_.isEmpty()){
@@ -74,7 +62,7 @@ std::string SectionNode::docRenderingCode()
             result += "for (" + extension_.content() + "){ ";
     }
     for (auto& node : contentNodes_)
-        result += node->docRenderingCode();
+        result += node->renderingCode();
     if (!extension_.isEmpty())
         result += " } ";
     return result;

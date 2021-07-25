@@ -6,13 +6,13 @@ namespace htcpp{
 
 class CodeNode : public IDocumentNode{
 public:
-    CodeNode(std::string name,
+    CodeNode(std::string nodeTypeName,
              char idToken,
              char openToken,
              char closeToken,
              StreamReader& stream);
-    std::string docTemplate() override;
-    std::string docRenderingCode() override;    
+
+    std::string renderingCode() override;
 
 protected:
     std::string content_;
@@ -22,27 +22,26 @@ private:
     void load(StreamReader& stream);
 
 private:
-    std::string name_;
+    std::string nodeTypeName_;
     char idToken_;
     char openToken_;
-    char closeToken_;    
-    bool extensionIsOnClosingToken_ = false;
+    char closeToken_;
 };
 
 class ExpressionNode : public CodeNode
 {
 public:
     explicit ExpressionNode(StreamReader& stream) :
-        CodeNode("Expression ", '$', '(', ')', stream)
+        CodeNode("Expression", '$', '(', ')', stream)
     {}
-    std::string docRenderingCode() override;
+    std::string renderingCode() override;
 };
 
-class RenderStatementNode : public CodeNode
+class StatementNode : public CodeNode
 {
 public:
-    explicit RenderStatementNode(StreamReader& stream) :
-        CodeNode("Render statement", '$', '{', '}', stream)
+    explicit StatementNode(StreamReader& stream) :
+        CodeNode("Statement", '$', '{', '}', stream)
     {}    
 };
 

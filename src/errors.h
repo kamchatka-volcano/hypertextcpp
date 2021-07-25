@@ -1,4 +1,5 @@
 #pragma once
+#include "streamreaderposition.h"
 #include <stdexcept>
 #include <string>
 
@@ -16,6 +17,12 @@ class ParsingError : public Error{
 };
 
 class TemplateError : public Error{
+public:
+    TemplateError(const StreamReaderPosition& errorPosition, const std::string& errorMsg)
+        : Error("[line:" + std::to_string(errorPosition.line) +
+                ", column:" + std::to_string(errorPosition.column) + "] " + errorMsg)
+    {
+    }
     using Error::Error;
 };
 

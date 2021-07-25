@@ -78,12 +78,12 @@ std::string SharedLibTranspiler::generateCode() const
 
     )"};
     for (const auto& globalStatement : globalStatementList_)
-        result += globalStatement->docRenderingCode() + "\n";
+        result += globalStatement->renderingCode() + "\n";
 
     result += "namespace {\n";
     for (const auto& procedure : procedureList_) {
         result += "void " + procedure->name() + "(const Cfg& cfg, std::ostream& out){\n";
-        result += procedure->docRenderingCode() + "\n}\n";
+        result += procedure->renderingCode() + "\n}\n";
     }
     result += "\n}\n";
 
@@ -96,7 +96,7 @@ std::string SharedLibTranspiler::generateCode() const
                   "(cfg, out); return std::string{};};\n";
 
     for (auto& node : nodeList_)
-        result += node->docRenderingCode();
+        result += node->renderingCode();
     result += "\n}\n";
 
     result +=

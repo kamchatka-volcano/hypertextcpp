@@ -1,16 +1,11 @@
 #include "streamreader.h"
 #include <tuple>
-#include <sstream>
-#include <istream>
 
 namespace htcpp{
 
-StreamReader::StreamReader(std::istream& stream, int firstLine, int firstColumn)
+StreamReader::StreamReader(std::istream& stream, const StreamReaderPosition& startPosition)
     : stream_(stream)
-    , line_(1)
-    , column_(0)
-    , firstLine_(firstLine)
-    , firstColumn_(firstColumn)
+    , startPosition_(startPosition)
 {
 }
 
@@ -22,14 +17,13 @@ std::string StreamReader::read(int size)
         if (!stream_.get(ch))
             return {};
         if (ch == '\n'){
-            line_++;
-            column_ = 0;
-            firstColumn_ = 0;
+            position_.line++;
+            position_.column = 0;
         }
         else if (ch == '\t')
-            column_+= 4;
+            position_.column += 4;
         else
-            column_++;
+            position_.column++;
         result.push_back(ch);
     }
     return result;
@@ -62,21 +56,10 @@ bool StreamReader::atEnd()
     return peek().empty();
 }
 
-int StreamReader::line() const
+StreamReaderPosition StreamReader::position() const
 {
-    return line_;
-}
-
-int StreamReader::column() const
-{
-    return column_;
-}
-
-std::string StreamReader::positionInfo() const
-{
-    auto stream = std::stringstream{};
-    stream << "[line:"<< firstLine_ + line_ << ", column:" << firstColumn_ + column_<< "]";
-    return stream.str();
+    return {startPosition_.line + position_.line,
+            startPosition_.column + position_.column};
 }
 
 }

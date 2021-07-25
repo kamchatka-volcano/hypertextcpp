@@ -16,13 +16,13 @@ std::string SingleHeaderTranspiler::generateCode() const
             "#include <iostream>\n"
             "#include <sstream>\n";
     for(const auto& globalStatement : globalStatementList_)
-        result += globalStatement->docRenderingCode() + "\n";
+        result += globalStatement->renderingCode() + "\n";
 
     for (const auto& procedure : procedureList_){
         result += "namespace {\n";
         result += "template <typename TCfg>\n";
         result += "void " + procedure->name() + "(const TCfg& cfg, std::ostream& out){\n";
-        result += procedure->docRenderingCode() + "\n}\n";
+        result += procedure->renderingCode() + "\n}\n";
         result += "}\n";
     }
 
@@ -37,7 +37,7 @@ std::string SingleHeaderTranspiler::generateCode() const
         result += "auto " + procedure->name() + " = [&cfg, &out]{ ::" + procedure->name() + "(cfg, out); return std::string{};};\n";
 
     for(const auto& node : nodeList_)
-        result += node->docRenderingCode();
+        result += node->renderingCode();
 
     result +=
             "        }\n"

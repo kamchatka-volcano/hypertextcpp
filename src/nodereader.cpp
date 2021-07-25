@@ -17,7 +17,7 @@ std::unique_ptr<IDocumentNode> readCommonNodes(StreamReader& stream)
     if (stream.peek(2) == "$(")
         return std::make_unique<ExpressionNode>(stream);
     if (stream.peek(2) == "${")
-        return std::make_unique<RenderStatementNode>(stream);
+        return std::make_unique<StatementNode>(stream);
     return nullptr;
 }
 }

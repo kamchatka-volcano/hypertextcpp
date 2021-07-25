@@ -6,7 +6,6 @@
 #include <cmdlime/configreader.h>
 #include <filesystem>
 #include <iostream>
-#include <sstream>
 #include <fstream>
 #include <memory>
 
@@ -38,16 +37,19 @@ int main(int argc, char**argv)
     auto transpiler = makeTranspiler(cfg);
     try{
         result = transpiler->process(cfg.input);
+        auto stream = std::ofstream{getOutputFilePath(cfg)};
+        stream << result;
     }
     catch(const htcpp::Error& e)
     {
         std::cerr << e.what() << std::endl;
         return -1;
     }
-
-    auto stream = std::ofstream{getOutputFilePath(cfg)};
-    stream << result;
-
+    catch(const std::exception& e)
+    {
+        std::cerr << "Unknown critical error:" << e.what() << std::endl;
+        return -1;
+    }
     return 0;
 }
 

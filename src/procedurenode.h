@@ -10,11 +10,10 @@ class StreamReader;
 class ProcedureNode : public IDocumentNode
 {
 public:
-    ProcedureNode(const std::string& procedureName, StreamReader& stream);
+    ProcedureNode(std::string procedureName, StreamReader& stream);
     const std::string& name() const;
 
-    std::string docTemplate() override;
-    std::string docRenderingCode() override;
+    std::string renderingCode() override;
 
 
 private:

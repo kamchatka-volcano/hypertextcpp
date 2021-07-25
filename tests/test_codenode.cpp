@@ -11,8 +11,8 @@ void test(const std::string& input, const std::string& expected)
 {
     auto stream = std::istringstream{input};    
     auto streamReader = htcpp::StreamReader{stream};
-    auto tag = TNode{streamReader};
-    auto result = tag.docTemplate();
+    auto node = TNode{streamReader};
+    auto result = node.renderingCode();
     EXPECT_EQ(result, expected);
 }
 
@@ -22,9 +22,8 @@ void testError(const std::string& input, const std::string& expectedErrorMsg)
     assert_exception<htcpp::TemplateError>(
         [input]{
             auto stream = std::istringstream{input};
-            auto token = TNode{};
             auto streamReader = htcpp::StreamReader{stream};
-            token.load(streamReader);
+            auto node = TNode{streamReader};
         },
         [expectedErrorMsg](const htcpp::TemplateError& e){
             EXPECT_EQ(e.what(), expectedErrorMsg);
@@ -33,94 +32,142 @@ void testError(const std::string& input, const std::string& expectedErrorMsg)
 
 }
 
-TEST(RenderedExpressionNode, Basic)
+TEST(ExpressionNode, Basic)
 {
     test<htcpp::ExpressionNode>
             ("$( isVisible ? 100 : defaultValue())",
-             "$( isVisible ? 100 : defaultValue())");
+             "out << ( isVisible ? 100 : defaultValue());");
 }
 
-TEST(RenderedExpressionNode, WithStringOutput)
+TEST(ExpressionNode, WithStringOutput)
 {
     test<htcpp::ExpressionNode>
             ("$( isVisible ? `Hello:)` : defaultValue())",
-             "$( isVisible ? `Hello:)` : defaultValue())");
+             "out << ( isVisible ? R\"(Hello:))\" : defaultValue());");
 }
 
-TEST(RenderedExpressionNode, WithConditionalExtension)
+TEST(ExpressionNode, WithConditionalExtension)
 {
     test<htcpp::ExpressionNode>
             ("$(?(isVisible) isVisible ? 100 : defaultValue())",
-             "$(?(isVisible) isVisible ? 100 : defaultValue())");
+             "if (isVisible){ out << ( isVisible ? 100 : defaultValue()); } ");
 }
 
-TEST(RenderedExpressionNode, WithLoopExtension)
+TEST(ExpressionNode, WithLoopExtension)
 {
     test<htcpp::ExpressionNode>
             ("$(@(auto i = 0; i < 5; ++i) isVisible ? 100 : defaultValue())",
-             "$(@(auto i = 0; i < 5; ++i) isVisible ? 100 : defaultValue())");
+             "for (auto i = 0; i < 5; ++i){ out << ( isVisible ? 100 : defaultValue()); } ");
 }
 
-TEST(RenderedExpressionNode, WithMacroExtension)
-{
-    test<htcpp::ExpressionNode>
-            ("$(#(test_macro) isVisible ? 100 : defaultValue())",
-             "$(#(test_macro) isVisible ? 100 : defaultValue())");
-}
-
-TEST(RenderedExpressionNode, WithConditionalExtensionOnClosingBraces)
+TEST(ExpressionNode, WithConditionalExtensionOnClosingBraces)
 {
     test<htcpp::ExpressionNode>
             ("$( isVisible ? 100 : defaultValue())?(isVisible)",
-             "$( isVisible ? 100 : defaultValue())?(isVisible)");
+             "if (isVisible){ out << ( isVisible ? 100 : defaultValue()); } ");
 }
 
-TEST(RenderedExpressionNode, WithLoopExtensionOnClosingBraces)
+TEST(ExpressionNode, WithLoopExtensionOnClosingBraces)
 {
     test<htcpp::ExpressionNode>
             ("$( isVisible ? 100 : defaultValue())@(auto i = 0; i < 5; ++i)",
-             "$( isVisible ? 100 : defaultValue())@(auto i = 0; i < 5; ++i)");
+             "for (auto i = 0; i < 5; ++i){ out << ( isVisible ? 100 : defaultValue()); } ");
 }
 
 
-TEST(RenderedExpressionNode, WithMacroExtensionOnClosingBraces)
+TEST(ExpressionNode, WithMacroExtensionOnClosingBraces)
 {
     test<htcpp::ExpressionNode>
             ("$( isVisible ? 100 : defaultValue())#(test_macro)",
-             "$( isVisible ? 100 : defaultValue())#(test_macro)");
+             "out << ( isVisible ? 100 : defaultValue());");
 }
 
 
-TEST(RenderingCodeNode, Basic)
+TEST(StatementNode, Basic)
 {
-    test<htcpp::RenderStatementNode>
+    test<htcpp::StatementNode>
             ("${ auto a = 0; {/*local scope*/} }",
-             "${ auto a = 0; {/*local scope*/} }");
+             " auto a = 0; {/*local scope*/} ");
 }
 
-TEST(RenderingCodeNode, BasicWithString)
+TEST(StatementNode, BasicWithString)
 {
-    test<htcpp::RenderStatementNode>
+    test<htcpp::StatementNode>
             ("${ auto a = 0; {auto str = `Hello {}`;} }",
-             "${ auto a = 0; {auto str = `Hello {}`;} }");
+             " auto a = 0; {auto str = R\"(Hello {})\";} ");
 }
 
-TEST(GlobalCodeNode, Basic)
+TEST(GlobalStatementNode, Basic)
 {
     test<htcpp::GlobalStatementNode>
             ("#{ auto a = 0; {/*local scope*/} }",
-             "#{ auto a = 0; {/*local scope*/} }");
+             " auto a = 0; {/*local scope*/} ");
 }
 
-TEST(GlobalCodeNode, BasicWithString)
+TEST(GlobalStatementNode, BasicWithString)
 {
     test<htcpp::GlobalStatementNode>
             ("#{ auto a = 0; {auto str = `Hello {}`;} }",
-             "#{ auto a = 0; {auto str = `Hello {}`;} }");
+             " auto a = 0; {auto str = R\"(Hello {})\";} ");
 }
 
+TEST(InvalidExpressionNode, Unclosed)
+{
+    testError<htcpp::ExpressionNode>("$(cfg.value",
+                                     "[line:1, column:1] Expression isn't closed with ')'");
+}
 
+TEST(InvalidExpressionNode, Empty)
+{
+    testError<htcpp::ExpressionNode>("$(  )",
+                                     "[line:1, column:1] Expression can't be empty");
+}
 
+TEST(InvalidExpressionNode, MultipleExtensionsTwoConditionals)
+{
+    testError<htcpp::ExpressionNode>("$(?(isVisible) cfg.value)?(isVisible)",
+                                     "[line:1, column:26] Expression can't have multiple extensions");
+}
 
+TEST(InvalidExpressionNode, MultipleExtensionsLoopAndConditional)
+{
+    testError<htcpp::ExpressionNode>("$(@(auto i; i < 5; ++i) cfg.value)?(isVisible)",
+                                     "[line:1, column:35] Expression can't have multiple extensions");
+}
 
+TEST(InvalidExpressionNode, MultipleExtensionsConditionalAndLoop)
+{
+    testError<htcpp::ExpressionNode>("$(?(isVisible) cfg.value)@(auto i; i < 5; ++i)",
+                                     "[line:1, column:26] Expression can't have multiple extensions");
+}
+
+TEST(InvalidExpressionNode, MultipleExtensionsTwoLoops)
+{
+    testError<htcpp::ExpressionNode>("$(@(auto i; i < 5; ++i) cfg.value)@(auto i; i < 5; ++i)",
+                                     "[line:1, column:35] Expression can't have multiple extensions");
+}
+
+TEST(InvalidStatementNode, Unclosed)
+{
+    testError<htcpp::StatementNode>("${ auto x = 0;",
+                                     "[line:1, column:1] Statement isn't closed with '}'");
+}
+
+TEST(InvalidStatementNode, Empty)
+{
+    testError<htcpp::StatementNode>("${   }",
+                                    "[line:1, column:1] Statement can't be empty");
+}
+
+TEST(InvalidGlobalStatementNode, Unclosed)
+{
+    testError<htcpp::GlobalStatementNode>("#{ #include <set> ",
+                                    "[line:1, column:1] Global statement isn't closed with '}'");
+}
+
+TEST(InvalidGlobalStatementNode, Empty)
+{
+    testError<htcpp::GlobalStatementNode>("#{   }",
+                                    "[line:1, column:1] Global statement can't be empty");
+}
 

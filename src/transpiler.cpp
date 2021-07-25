@@ -6,12 +6,9 @@
 #include "errors.h"
 #include "utils.h"
 #include "codenode.h"
-#include <sstream>
 #include <fstream>
 #include <vector>
-#include <memory>
 #include <map>
-#include <tuple>
 
 namespace htcpp{
 Transpiler::Transpiler() = default;
@@ -24,7 +21,7 @@ void Transpiler::parseTemplateFile(const fs::path& filePath)
         throw ParsingError("Can't open file " + filePath.string());
 
     auto stream = StreamReader{fileStream};
-    auto prototypeFuncMap = std::map<std::string, std::string>{};        
+    auto prototypeFuncMap = std::map<std::string, std::string>{};
 
     while(!stream.atEnd())
         if (!readNode(stream))

@@ -8,12 +8,7 @@ TextNode::TextNode(std::string value)
 }
 
 
-std::string TextNode::docTemplate()
-{
-    return value_;
-}
-
-std::string TextNode::docRenderingCode()
+std::string TextNode::renderingCode()
 {
     return "out << R\"(" + value_ + ")\";";
 }

@@ -7,12 +7,12 @@
 
 namespace htcpp{
 
-CodeNode::CodeNode(std::string name,
+CodeNode::CodeNode(std::string nodeTypeName,
                    char idToken,
                    char openToken,
                    char closeToken,                   
                    StreamReader& stream)
-    : name_(std::move(name))
+    : nodeTypeName_(std::move(nodeTypeName))
     , idToken_(idToken)
     , openToken_(openToken)
     , closeToken_(closeToken)    
@@ -22,7 +22,7 @@ CodeNode::CodeNode(std::string name,
 
 void CodeNode::load(StreamReader& stream)
 {
-    auto nodePosInfo = stream.positionInfo();
+    auto nodePos = stream.position();
     Expects(stream.read(2) == std::string{} + idToken_ + openToken_);
     extension_ = readNodeExtension(stream);
 
@@ -39,41 +39,30 @@ void CodeNode::load(StreamReader& stream)
             else if (res.front() == closeToken_){
                 openParenthesisNum--;
                 if (openParenthesisNum == 0){
-                    const auto extensionPos = stream.positionInfo();
+                    const auto extensionPos = stream.position();
                     const auto closingTokenExtension = readNodeExtension(stream);
                     if (!closingTokenExtension.isEmpty()){
                         if (!extension_.isEmpty())
-                            throw TemplateError{extensionPos + " " + name_ + " can't have multiple extensions"};
+                            throw TemplateError{extensionPos, nodeTypeName_ + " can't have multiple extensions"};
                         extension_ = closingTokenExtension;
-                        extensionIsOnClosingToken_ = true;
                     }
+                    if (utils::isBlank(content_))
+                        throw TemplateError(nodePos, nodeTypeName_ + " can't be empty");
                     return;
                 }
             }
         }
         content_ += res;
     }
-    throw TemplateError{nodePosInfo += " " + name_ + " isn't closed with '" + closeToken_ + "'"};
+    throw TemplateError{nodePos, nodeTypeName_ + " isn't closed with '" + closeToken_ + "'"};
 }
 
-std::string CodeNode::docTemplate()
-{
-    auto result = std::string{};
-    result += std::string{} + idToken_ + openToken_;
-    if (!extensionIsOnClosingToken_)
-        result += extension_.docTemplate();
-    result += content_ + closeToken_;
-    if (extensionIsOnClosingToken_)
-        result += extension_.docTemplate();
-    return result;
-}
-
-std::string CodeNode::docRenderingCode()
+std::string CodeNode::renderingCode()
 {
     return utils::preprocessRawStrings(content_);
 }
 
-std::string ExpressionNode::docRenderingCode()
+std::string ExpressionNode::renderingCode()
 {
     auto result = std::string{};
     if (!extension_.isEmpty()){

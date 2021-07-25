@@ -50,7 +50,7 @@ std::string NodeExtension::docTemplate() const
 
 NodeExtension readNodeExtension(StreamReader& stream)
 {
-    const auto nodePos =  stream.positionInfo();
+    const auto nodePos = stream.position();
     const auto nextChars = stream.peek(2);
     auto extensionType = NodeExtension::Type::None;
     if (nextChars.empty())
@@ -74,13 +74,13 @@ NodeExtension readNodeExtension(StreamReader& stream)
             openParenthesisNum--;
             if (openParenthesisNum == 0){
                 if (utils::isBlank(extensionContent))
-                    throw TemplateError{nodePos + " " + nodeExtensionName(extensionType) + " can't be empty"};
+                    throw TemplateError{nodePos, nodeExtensionName(extensionType) + " can't be empty"};
                 return {extensionType, extensionContent};
             }
         }
         extensionContent += res;
     }
-    throw TemplateError{nodePos + " " + nodeExtensionName(extensionType) + " isn't closed with ')'"};
+    throw TemplateError{nodePos, nodeExtensionName(extensionType) + " isn't closed with ')'"};
 }
 
 }

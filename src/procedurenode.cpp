@@ -7,10 +7,11 @@
 
 namespace htcpp{
 
-ProcedureNode::ProcedureNode(const std::string& procedureName,
+ProcedureNode::ProcedureNode(std::string procedureName,
                              StreamReader& stream)
-    : procedureName_(procedureName)
+    : procedureName_(std::move(procedureName))
 {
+    Expects(!procedureName_.empty());
     load(stream);
 }
 
@@ -21,40 +22,32 @@ const std::string& ProcedureNode::name() const
 
 void ProcedureNode::load(StreamReader& stream)
 {
-    auto nodePosInfo = stream.positionInfo();    
+    auto nodePos = stream.position();
     Expects(stream.read(static_cast<int>(procedureName_.size()) + 4) == "#" + procedureName_ + "(){");
 
-    auto readedText = std::string{};
+    auto readText = std::string{};
     while (!stream.atEnd()){
         if (stream.peek() == "}"){
             stream.skip(1);
-            utils::consumeReadText(readedText, contentNodes_);
+            utils::consumeReadText(readText, contentNodes_);
             return;
         }
         auto node = readNonTagNode(stream);
         if (node){
-            utils::consumeReadText(readedText, contentNodes_, node.get());
+            utils::consumeReadText(readText, contentNodes_, node.get());
             contentNodes_.emplace_back(std::move(node));
         }
         else
-            readedText += stream.read();
+            readText += stream.read();
     }
+    throw TemplateError{nodePos, "Procedure isn't closed with '}'"};
 }
 
-std::string ProcedureNode::docTemplate()
-{
-    auto result = procedureName_ + "(){\n";
-    for (auto& node : contentNodes_)
-        result += node->docTemplate();
-    result += "}\n";
-    return result;
-}
-
-std::string ProcedureNode::docRenderingCode()
+std::string ProcedureNode::renderingCode()
 {
     auto result = std::string{};
     for (auto& node : contentNodes_)
-        result += node->docRenderingCode();
+        result += node->renderingCode();
     return result;
 }
 

@@ -2,44 +2,46 @@
 #include <gtest/gtest.h>
 #include <errors.h>
 #include <procedurenode.h>
-#include <tagnode.h>
 #include <streamreader.h>
 #include <nodereader.h>
 
 namespace{
 
-void test(const std::string& name, const std::string& input, const std::string& expected)
+void test(const std::string& input, const std::string& expectedName, const std::string& expectedCode)
 {
     auto stream = std::istringstream{input};
     auto streamReader = htcpp::StreamReader{stream};
-    //auto tag = htcpp::ProcedureNode{name, streamReader};
     auto procedure = readProcedure(streamReader);
-    auto result = procedure->docRenderingCode();
-    EXPECT_EQ(result, expected);
+    auto result = procedure->renderingCode();
+    EXPECT_EQ(result, expectedCode);
+    EXPECT_EQ(expectedName, procedure->name());
 }
 
-//void testError(const std::string& input, const std::string& expectedErrorMsg)
-//{
-//    assert_exception<htcpp::TemplateError>(
-//        [input]{
-//            auto stream = std::istringstream{input};
-//            auto streamReader = htcpp::StreamReader{stream};
-//            auto nodeReader = htcpp::NodeReader{};
-//            auto node = htcpp::SectionNode{streamReader, nodeReader};
-//        },
-//        [expectedErrorMsg](const htcpp::TemplateError& e){
-//            EXPECT_EQ(e.what(), expectedErrorMsg);
-//        });
-//}
+void testError(const std::string& input, const std::string& expectedErrorMsg)
+{
+    assert_exception<htcpp::TemplateError>(
+        [input]{
+            auto stream = std::istringstream{input};
+            auto streamReader = htcpp::StreamReader{stream};
+            auto procedure = readProcedure(streamReader);
+        },
+        [expectedErrorMsg](const htcpp::TemplateError& e){
+            EXPECT_EQ(e.what(), expectedErrorMsg);
+        });
+}
 
 }
 
 TEST(ProcedureNode, Basic)
 {
-    test("hello_world",
-         "#hello_world(){ <p>Hello World! </p> }",
+    test("#hello_world(){ <p>Hello World! </p> }",
+         "hello_world",
          "out << R\"( )\";out << \"<p\";out << \">\";out << R\"(Hello World! )\";out << \"</p>\";out << R\"( )\";");
 }
 
 
-
+TEST(InvalidProcedureNode, Unclosed)
+{
+    testError("#hello_world(){<p>Hello World! </p>",
+              "[line:1, column:1] Procedure isn't closed with '}'");
+}

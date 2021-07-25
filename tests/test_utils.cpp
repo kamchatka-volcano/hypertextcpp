@@ -13,7 +13,7 @@ TEST(Utils, PreprocessRawString)
 TEST(Utils, TrimLastBlankLine)
 {
     {
-    auto str = std::string{""};
+    auto str = std::string{};
     htcpp::utils::trimBlankLines(str);
     EXPECT_EQ(str, "");
     }

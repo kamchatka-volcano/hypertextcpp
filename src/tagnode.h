@@ -1,11 +1,11 @@
 #pragma once
 #include "idocumentnode.h"
 #include "nodeextension.h"
+#include "streamreaderposition.h"
 #include <vector>
 #include <memory>
 
 namespace htcpp{
-class NodeReader;
 
 class TagNode : public IDocumentNode
 {
@@ -16,23 +16,22 @@ class TagNode : public IDocumentNode
 
 public:
     explicit TagNode(StreamReader& stream);
-    std::string docTemplate() override;
-    std::string docRenderingCode() override;
+
+    std::string renderingCode() override;
     const NodeExtension& extension() const;
 
 private:
     void load(StreamReader& stream);
-    ReadResult readName(StreamReader& stream);
+    TagNode::ReadResult readName(StreamReader& stream, const htcpp::StreamReaderPosition& nodePos);
     ReadResult readAttributes(StreamReader& stream);
 
 private:    
-    std::string readedText_;
+    std::string readText_;
     std::string name_;
-    bool attributesReaded_ = false;
+    bool attributesRead_ = false;
     std::vector<std::unique_ptr<IDocumentNode>> attributeNodes_;
     std::vector<std::unique_ptr<IDocumentNode>> contentNodes_;
     NodeExtension extension_;
-    bool extensionIsOnClosingTag_ = false;
 };
 
 }

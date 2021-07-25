@@ -1,4 +1,5 @@
 #pragma once
+#include "streamreaderposition.h"
 #include <string>
 #include <istream>
 
@@ -6,7 +7,7 @@ namespace htcpp{
 
 class StreamReader{
 public:
-    explicit StreamReader(std::istream& stream, int firstLine = 0, int firstColumn = 0);
+    explicit StreamReader(std::istream& stream, const StreamReaderPosition& startPosition = StreamReaderPosition{1, 1});
     StreamReader(StreamReader&&) = default;
     StreamReader(const StreamReader&) = delete;
     StreamReader& operator=(const StreamReader&) = delete;
@@ -14,16 +15,12 @@ public:
     std::string peek(int size = 1);
     void skip(int size);
     bool atEnd();
-    int line() const;
-    int column() const;
-    std::string positionInfo() const;
+    StreamReaderPosition position() const;
 
 private:
     std::istream& stream_;
-    int line_;
-    int column_;
-    int firstLine_;
-    int firstColumn_;
+    StreamReaderPosition position_;
+    StreamReaderPosition startPosition_;
 };
 
 }
