@@ -28,12 +28,25 @@ void CodeNode::load(StreamReader& stream)
 
     auto openParenthesisNum = 1;
     auto insideString = false;
+    auto insideRawString = false;
+    auto insideChar = false;
+    auto lastStringPos = StreamReaderPosition{};
     while(!stream.atEnd()){
         auto res = stream.read();
-        if (res == "`")
+        if (res == "`") {
+            insideRawString = !insideRawString;
+            lastStringPos = stream.position();
+        }
+        if (res == "\"") {
             insideString = !insideString;
+            lastStringPos = stream.position();
+        }
+        if (res == "'") {
+            insideChar = !insideChar;
+            lastStringPos = stream.position();
+        }
 
-        if (!insideString){
+        if (!insideString && !insideRawString && !insideChar){
             if (res.front() == openToken_)
                 openParenthesisNum++;
             else if (res.front() == closeToken_){
@@ -48,18 +61,27 @@ void CodeNode::load(StreamReader& stream)
                     }
                     if (utils::isBlank(content_))
                         throw TemplateError(nodePos, nodeTypeName_ + " can't be empty");
+
+                    content_ = utils::transformRawStrings(content_, nodePos);
                     return;
                 }
             }
         }
         content_ += res;
     }
+    if (insideString)
+        throw TemplateError{lastStringPos, "String isn't closed with '\"'"};
+    if (insideRawString)
+        throw TemplateError{lastStringPos, "String isn't closed with '`'"};
+    if (insideChar)
+        throw TemplateError{lastStringPos, "Char literal isn't closed with \"'\""};
+
     throw TemplateError{nodePos, nodeTypeName_ + " isn't closed with '" + closeToken_ + "'"};
 }
 
 std::string CodeNode::renderingCode()
 {
-    return utils::preprocessRawStrings(content_);
+    return content_;
 }
 
 std::string ExpressionNode::renderingCode()
@@ -71,7 +93,7 @@ std::string ExpressionNode::renderingCode()
         else if (extension_.type() == NodeExtension::Type::Loop)
             result += "for (" + extension_.content() + "){ ";
     }
-    result += "out << (" + utils::preprocessRawStrings(content_) + ");";
+    result += "out << (" + content_ + ");";
     if (!extension_.isEmpty())
         result += " } ";
     return result;

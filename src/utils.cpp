@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "streamreader.h"
+#include "streamreaderposition.h"
 #include "errors.h"
 #include "textnode.h"
 #include "tagnode.h"
@@ -56,17 +57,20 @@ bool isBlank(const std::string& str)
     return nonWhitespaceIt == str.end();
 }
 
-std::string preprocessRawStrings(const std::string& cppCode)
+std::string transformRawStrings(const std::string& cppCode, const StreamReaderPosition& position)
 {
     auto result = std::string{};
     auto codeStream = std::stringstream{cppCode};
-    auto stream = StreamReader{codeStream};
+    auto stream = StreamReader{codeStream, position};
     auto insideString = false;
+    auto rawStringPos = StreamReaderPosition{};
     while (!stream.atEnd()){
          auto res = stream.read();
          if (res == "`"){
-             if (!insideString)
+             if (!insideString) {
+                 rawStringPos = stream.position();
                  result += "R\"(";
+             }
              else
                  result += ")\"";
              insideString = !insideString;
@@ -75,7 +79,7 @@ std::string preprocessRawStrings(const std::string& cppCode)
              result += res;
     }
     if (insideString)
-        throw TemplateError{"String is unclosed"};
+        throw TemplateError{rawStringPos, "String is unclosed"};
 
     return result;
 }

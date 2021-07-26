@@ -5,12 +5,13 @@
 
 namespace htcpp{
 class IDocumentNode;
+struct StreamReaderPosition;
 }
 
 namespace htcpp::utils{
 
 bool isTagEmptyElement(const std::string& tagName);
-std::string preprocessRawStrings(const std::string& cppCode);
+std::string transformRawStrings(const std::string& cppCode, const StreamReaderPosition& position);
 bool isBlank(const std::string& str);
 void trimBlankLines(std::string& str);
 

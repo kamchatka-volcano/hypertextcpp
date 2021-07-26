@@ -23,7 +23,6 @@ public:
                 ", column:" + std::to_string(errorPosition.column) + "] " + errorMsg)
     {
     }
-    using Error::Error;
 };
 
 }

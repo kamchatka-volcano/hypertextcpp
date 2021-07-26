@@ -3,11 +3,30 @@
 #include <errors.h>
 #include <utils.h>
 
-TEST(Utils, PreprocessRawString)
+TEST(Utils, TransformRawString)
 {
+    {
     auto code = "auto x = `Hello World`;";
-    EXPECT_EQ(htcpp::utils::preprocessRawStrings(code),
+    EXPECT_EQ(htcpp::utils::transformRawStrings(code, {1, 1}),
               "auto x = R\"(Hello World)\";");
+    }
+    {
+    auto code = "auto x = ``;";
+    EXPECT_EQ(htcpp::utils::transformRawStrings(code, {1, 1}),
+          "auto x = R\"()\";");
+    }
+}
+
+TEST(Utils, TransformInvalidRawString)
+{
+    assert_exception<htcpp::TemplateError>(
+        []{
+            auto result = htcpp::utils::transformRawStrings("auto x = `Hello World;", {1, 1});
+        },
+        [](const auto& error)
+        {
+            EXPECT_EQ(error.what(), std::string{"[line:1, column:11] String is unclosed"});
+        });
 }
 
 TEST(Utils, TrimLastBlankLine)

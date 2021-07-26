@@ -42,8 +42,29 @@ TEST(ExpressionNode, Basic)
 TEST(ExpressionNode, WithStringOutput)
 {
     test<htcpp::ExpressionNode>
+            ("$( isVisible ? \"Hello:)\" : defaultValue())",
+             "out << ( isVisible ? \"Hello:)\" : defaultValue());");
+}
+
+TEST(ExpressionNode, WithRawStringOutput)
+{
+    test<htcpp::ExpressionNode>
+            ("$( isVisible ? R\"(Hello:))\" : defaultValue())",
+             "out << ( isVisible ? R\"(Hello:))\" : defaultValue());");
+}
+
+TEST(ExpressionNode, WithCustomRawStringOutput)
+{
+    test<htcpp::ExpressionNode>
             ("$( isVisible ? `Hello:)` : defaultValue())",
              "out << ( isVisible ? R\"(Hello:))\" : defaultValue());");
+}
+
+TEST(ExpressionNode, WithCharOutput)
+{
+    test<htcpp::ExpressionNode>
+            ("$( isVisible ? std::string{\"Hello:\"} + ')' : defaultValue())",
+             "out << ( isVisible ? std::string{\"Hello:\"} + ')' : defaultValue());");
 }
 
 TEST(ExpressionNode, WithConditionalExtension)
@@ -116,6 +137,25 @@ TEST(InvalidExpressionNode, Unclosed)
     testError<htcpp::ExpressionNode>("$(cfg.value",
                                      "[line:1, column:1] Expression isn't closed with ')'");
 }
+
+TEST(InvalidExpressionNode, UnclosedString)
+{
+    testError<htcpp::ExpressionNode>("$(\"Hello)",
+                                     "[line:1, column:4] String isn't closed with '\"'");
+}
+
+TEST(InvalidExpressionNode, UnclosedRawString)
+{
+    testError<htcpp::ExpressionNode>("$(`Hello)",
+                                     "[line:1, column:4] String isn't closed with '`'");
+}
+
+TEST(InvalidExpressionNode, UnclosedChar)
+{
+    testError<htcpp::ExpressionNode>("$(std::string{\"Hello\"} + '!)",
+                                     "[line:1, column:27] Char literal isn't closed with \"'\"");
+}
+
 
 TEST(InvalidExpressionNode, Empty)
 {
