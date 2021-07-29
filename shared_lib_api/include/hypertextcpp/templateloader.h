@@ -27,16 +27,16 @@ inline htcpp::TemplatePtr<TCfg> htcpp::loadTemplate<TCfg>(const std::string& lib
     \
     dlerror();\
 \
-    make_t* make_template = reinterpret_cast<make_t*>(dlsym(templateLib, "make"#TCfg"Template"));\
+    make_t* make_template = reinterpret_cast<make_t*>(dlsym(templateLib, "makeTemplate"));\
     const char* dlsym_error = dlerror();\
     if (dlsym_error) {\
-        throw TemplateLoadingError{std::string{} + "Cannot load symbol make"#TCfg"Template: " + dlsym_error};\
+        throw TemplateLoadingError{std::string{} + "Cannot load symbol makeTemplate: " + dlsym_error};\
     }\
 \
-    delete_t* destroy_template = reinterpret_cast<delete_t*>(dlsym(templateLib, "delete"#TCfg"Template"));\
+    delete_t* destroy_template = reinterpret_cast<delete_t*>(dlsym(templateLib, "deleteTemplate"));\
     dlsym_error = dlerror();\
     if (dlsym_error)\
-        throw TemplateLoadingError{std::string{} + "Cannot load symbol delete"#TCfg"Template: " + dlsym_error};\
+        throw TemplateLoadingError{std::string{} + "Cannot load symbol deleteTemplate: " + dlsym_error};\
     \
     return htcpp::TemplatePtr<TCfg>{make_template(), destroy_template};\
 }

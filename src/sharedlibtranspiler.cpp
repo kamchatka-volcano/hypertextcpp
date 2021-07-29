@@ -73,13 +73,13 @@ std::string SharedLibTranspiler::generateCode() const
     };\
     \
     extern "C" \
-    htcpp::ITemplate<TCfg>* make##TCfg##Template()\
+    htcpp::ITemplate<TCfg>* makeTemplate()\
     {\
         return new Template;\
     }\
     \
     extern "C" \
-    void delete##TCfg##Template(htcpp::ITemplate<TCfg>* ptr)\
+    void deleteTemplate(htcpp::ITemplate<TCfg>* ptr)\
     {\
         delete ptr;\
     }\
