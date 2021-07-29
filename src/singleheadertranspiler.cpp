@@ -19,8 +19,9 @@ std::string SingleHeaderTranspiler::generateCode() const
     result += "class " + className_ + ";\n";
     result += R"(
     namespace htcpp{
-    class AllowRenderTag{
-       friend class ::Simple;
+    class AllowRenderTag{)";
+    result += "   friend class ::" + className_ +";";
+    result += R"(
     private:
        AllowRenderTag(){};
     };
@@ -32,7 +33,7 @@ std::string SingleHeaderTranspiler::generateCode() const
     for (const auto& procedure : procedureList_){
         result += "namespace htcpp{\n";
         result += "template <typename TCfg>\n";
-        result += "void " + procedure->name() + "(const TCfg& cfg, std::ostream& out, AllowRenderTag){\n";
+        result += "inline void " + procedure->name() + "(const TCfg& cfg, std::ostream& out, AllowRenderTag){\n";
         result += procedure->renderingCode() + "\n}\n";
         result += "}\n";
     }
