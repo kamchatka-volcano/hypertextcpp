@@ -14,7 +14,7 @@ namespace fs = std::filesystem;
 namespace {
 struct Cfg : public cmdlime::Config{
     ARG(input, fs::path)                                 << ".htcpp file to transpile";
-    PARAM(output, fs::path)()                            << "output c++ file path";
+    PARAM(output, fs::path)()                            << "output c++ file path\n(if empty, current working directory is used)";
     PARAM(className, std::string)()                      << "generated class name";
     FLAG(sharedLib)                                      << "generate result as shared library source files";
     FLAG(classPascalcase) << cmdlime::WithoutShortName{} << "generate class name by using .htcpp filename in PascalCase";

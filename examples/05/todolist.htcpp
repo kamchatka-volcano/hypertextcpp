@@ -12,7 +12,7 @@
 }
 
 #taskList(){
-    <li [[style:"text-decoration: line-through;"]]?(task.isCompleted)>$(task.name)</li>@(auto task : cfg.tasks)
+    <li [[style="text-decoration: line-through;"]]?(task.isCompleted)>$(task.name)</li>@(auto task : cfg.tasks)
 }
 <html>	
     <body>
