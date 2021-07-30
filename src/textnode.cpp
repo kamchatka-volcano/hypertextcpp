@@ -13,5 +13,5 @@ std::string TextNode::renderingCode()
     return "out << R\"(" + value_ + ")\";";
 }
 
-};
+}
 
