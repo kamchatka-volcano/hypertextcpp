@@ -1,0 +1,25 @@
+#{
+    #include <vector>
+    struct PageParams{
+        struct Task{
+            std::string name;
+            bool isCompleted = false;
+        };
+        std::string name = "Bob";
+        std::vector<Task> tasks = {{"laundry", true}, {"cooking", false}};
+    } pageParams;
+    HTCPP_CONFIG(PageParams);
+}
+
+#taskList(){
+    <li [[style:"text-decoration: line-through;"]]?(task.isCompleted)>$(task.name)</li>@(auto task : cfg.tasks)
+}
+<html>	
+    <body>
+        <h1>$(cfg.name)'s todo list:</h1>
+        <p> No tasks found </p>?(cfg.tasks.empty())
+        <ul>
+            $(taskList())
+        </ul>
+    </body>
+</html>

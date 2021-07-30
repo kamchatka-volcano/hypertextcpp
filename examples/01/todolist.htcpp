@@ -1,0 +1,9 @@
+<html>	
+    <body>
+        <h1>$(cfg.name)'s todo list:</h1>
+        <p> No tasks found </p>?(cfg.tasks.empty())
+        <ul>
+            <li>$(task.name)</li>@(auto task : cfg.tasks)
+        </ul>
+    </body>
+</html>
