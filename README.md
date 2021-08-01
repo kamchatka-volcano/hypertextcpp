@@ -115,11 +115,11 @@ If **hypertextcpp** used a common approach for control flow in HTML template eng
         %%if cfg.tasks.empty()%%
         <p> No tasks found </p>				
         %%end%%
-        %%for auto task : cfg.tasks%%
-            <ul>							
+        <ul>
+            %%for auto task : cfg.tasks%%
                 <li>$(task.name)</li>
-            </ul>
-        %%end%%
+            %%end%%
+        </ul>        
     </body>
 </html>
 
