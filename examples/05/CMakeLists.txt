@@ -1,18 +1,11 @@
-cmake_minimum_required(VERSION 3.13)
-
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+cmake_minimum_required(VERSION 3.18)
 
 set(SRC
     todolist_printer.cpp)
     
 add_executable(todolist_printer ${SRC})
-target_link_libraries(todolist_printer dl)
+
+target_compile_features(todolist_printer PUBLIC cxx_std_17)
+set_target_properties(todolist_printer PROPERTIES CXX_EXTENSIONS OFF)
+
+target_link_libraries(todolist_printer ${CMAKE_DL_LIBS})

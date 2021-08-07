@@ -283,18 +283,7 @@ Converting template to C++ code each time you modify it is a laborious task, so 
 
 [`examples/04/CMakeLists.txt`](examples/04/CMakeLists.txt)
 ```
-cmake_minimum_required(VERSION 3.13)
-
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+cmake_minimum_required(VERSION 3.18)
 
 add_custom_command(
     OUTPUT  todolist.h
@@ -303,10 +292,13 @@ add_custom_command(
 )
 
 set(SRC
-    main.cpp
+    todolist_printer.cpp
     todolist.h)
 
 add_executable(todolist_printer ${SRC})
+
+target_compile_features(todolist_printer PUBLIC cxx_std_17)
+set_target_properties(todolist_printer PROPERTIES CXX_EXTENSIONS OFF)
 ```
 
 Now, everytime you change the template, the corresponding header will be regenerated on the next build.
@@ -350,20 +342,11 @@ Be sure to use an exact copy, any mismatch of the config structure between templ
 Next, we need to build our template renderer as a library. It's not possible to bundle multiple templates file in one library, so we can easily use a generic CMake file, that builds a library from a single `.htcpp` file:  
 [`shared_template/CMakeLists.txt`](shared_template/CMakeLists.txt)
 ```
-cmake_minimum_required(VERSION 3.13)
-
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -fPIC")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+cmake_minimum_required(VERSION 3.18)
 
 option(NAME "Template name")
+
+project(${NAME})
 
 add_custom_command(
     OUTPUT  ${NAME}.cpp
@@ -372,12 +355,14 @@ add_custom_command(
 )
 
 add_library(${NAME} SHARED ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cpp)
+target_compile_features(${NAME} PUBLIC cxx_std_17)
+set_target_properties(${NAME} PROPERTIES CXX_EXTENSIONS OFF)
 ```
 
 Copy `todolist.htcpp` in  `shared_template/` and execute the following commands:
 ```console
-kamchatka-volcano@home:~/shared_template$ mkdir build; cd build; 
-kamchatka-volcano@home:~/shared_template/build$ cmake -DNAME=todolist ..; make
+kamchatka-volcano@home:~/shared_template$ cmake -S . -B build -DNAME=todolist 
+kamchatka-volcano@home:~/shared_template/build$ cmake --build build
 ```
 If everything goes right, you'll get the `libtodolist.so` in the build directory. That's our `todolist.htcpp` template compiled as the shared library.  
 Next, let's modify the `todolist_printer.cpp` to be able to load it:  
@@ -413,17 +398,19 @@ Don't forget to add linking of system  library `dl` to the build config - that a
 
 ```console
 git clone https://github.com/kamchatka-volcano/hypertextcpp.git
-cd hypertextcpp && mkdir build && cd build
-cmake ..
-make install
+cd hypertextcpp
+cmake -S . -B build
+cmake --build build
+cmake --install build --component shared_lib_api
 ```
+You can omit `--component shared_lib_api` parameter if you don't need to load templates in shared libraries form. 
 
 ## Running tests
 ```console
-cd hypertextcpp/build
-cmake .. -DENABLE_TESTS=ON
-make
-ctest
+cd hypertextcpp
+cmake -S . -B build -DENABLE_TESTS=ON
+cmake --build build 
+cd build/tests && ctest
 ```
 
 ## License
