@@ -19,11 +19,12 @@ set(SRC
     src/sharedlibtranspiler.cpp)
     
 add_executable(hypertextcpp ${SRC})
+add_subdirectory(lib/cmdlime)
 target_compile_features(hypertextcpp PUBLIC cxx_std_17)
 set_target_properties(hypertextcpp PROPERTIES CXX_EXTENSIONS OFF)
 
-target_include_directories(hypertextcpp PRIVATE lib/cmdlime/include)
 target_include_directories(hypertextcpp PRIVATE lib/gsl/include)
+target_link_libraries(hypertextcpp PRIVATE cmdlime)
 
 option(ENABLE_TESTS "Enable tests" OFF)
 if (ENABLE_TESTS)
