@@ -1,6 +1,23 @@
 cmake_minimum_required(VERSION 3.18)
 
+include(FetchContent)
+
 project(hypertextcpp VERSION 1.0.0 DESCRIPTION "hypertextcpp")
+
+FetchContent_Declare(
+        cmdlime
+        GIT_REPOSITORY https://github.com/kamchatka-volcano/cmdlime.git
+        GIT_TAG        e30e7afd9870051757f374a00c1c2a02fb7f22c1
+        GIT_SHALLOW    ON
+)
+FetchContent_Declare(
+        GSL
+        GIT_REPOSITORY https://github.com/microsoft/GSL
+        GIT_TAG        v3.1.0
+        GIT_SHALLOW    ON
+)
+
+FetchContent_MakeAvailable(cmdlime GSL)
 
 set(SRC
     src/codenode.cpp
@@ -19,12 +36,10 @@ set(SRC
     src/sharedlibtranspiler.cpp)
     
 add_executable(hypertextcpp ${SRC})
-add_subdirectory(lib/cmdlime)
 target_compile_features(hypertextcpp PUBLIC cxx_std_17)
 set_target_properties(hypertextcpp PROPERTIES CXX_EXTENSIONS OFF)
 
-target_include_directories(hypertextcpp PRIVATE lib/gsl/include)
-target_link_libraries(hypertextcpp PRIVATE cmdlime)
+target_link_libraries(hypertextcpp PRIVATE cmdlime GSL)
 
 option(ENABLE_TESTS "Enable tests" OFF)
 if (ENABLE_TESTS)

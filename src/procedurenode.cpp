@@ -3,7 +3,8 @@
 #include "errors.h"
 #include "utils.h"
 #include "nodereader.h"
-#include <gsl/assert>
+#include <gsl/gsl>
+
 
 namespace htcpp{
 

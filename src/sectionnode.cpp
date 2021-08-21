@@ -4,7 +4,7 @@
 #include "nodereader.h"
 #include "textnode.h"
 #include "utils.h"
-#include <gsl/assert>
+#include <gsl/gsl>
 
 namespace htcpp{
 

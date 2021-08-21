@@ -3,7 +3,7 @@
 #include "errors.h"
 #include "utils.h"
 #include <utility>
-#include <gsl/assert>
+#include <gsl/gsl>
 
 namespace htcpp{
 

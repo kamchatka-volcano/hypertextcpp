@@ -403,7 +403,7 @@ cmake -S . -B build
 cmake --build build
 cmake --install build --component shared_lib_api
 ```
-You can omit `--component shared_lib_api` parameter if you don't need to load templates in shared libraries form. 
+You can omit the `--component shared_lib_api` parameter if you don't need to load templates in shared libraries form. 
 
 ## Running tests
 ```console
@@ -414,5 +414,4 @@ cd build/tests && ctest
 ```
 
 ## License
-**hypertextcpp** is licensed under the [MS-PL license](/LICENSE.md)  
-The bundled part of the [GSL](https://github.com/microsoft/GSL) library is licensed under the [MIT license](https://github.com/microsoft/GSL/blob/main/LICENSE)
+**hypertextcpp** is licensed under the [MS-PL license](/LICENSE.md)
