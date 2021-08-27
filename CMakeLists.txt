@@ -7,7 +7,7 @@ Set(FETCHCONTENT_QUIET FALSE)
 FetchContent_Declare(
         cmdlime
         GIT_REPOSITORY https://github.com/kamchatka-volcano/cmdlime.git
-        GIT_TAG        e30e7afd9870051757f374a00c1c2a02fb7f22c1
+        GIT_TAG        f71d8ba7658706fba92988451593728d5c874e28
         GIT_SHALLOW    ON
         GIT_PROGRESS TRUE
 )
