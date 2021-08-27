@@ -401,9 +401,10 @@ git clone https://github.com/kamchatka-volcano/hypertextcpp.git
 cd hypertextcpp
 cmake -S . -B build
 cmake --build build
+cmake --install build
 cmake --install build --component shared_lib_api
 ```
-You can omit the `--component shared_lib_api` parameter if you don't need to load templates in shared libraries form. 
+You can skip the installation of `shared_lib_api` component if you don't need to load templates in shared libraries form. 
 
 ## Running tests
 ```console
