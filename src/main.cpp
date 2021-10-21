@@ -13,13 +13,13 @@ namespace fs = std::filesystem;
 
 namespace {
 struct Cfg : public cmdlime::Config{
-    ARG(input, fs::path)                                 << ".htcpp file to transpile";
-    PARAM(output, fs::path)()                            << "output c++ file path\n(if empty, current working directory is used)";
-    PARAM(className, std::string)()                      << "generated class name";
-    FLAG(sharedLib)                                      << "generate result as shared library source files";
-    FLAG(classPascalcase) << cmdlime::WithoutShortName{} << "generate class name by using .htcpp filename in PascalCase";
-    FLAG(classSnakecase)  << cmdlime::WithoutShortName{} << "generate class name by using .htcpp filename in snake_case";
-    FLAG(classLowercase)  << cmdlime::WithoutShortName{} << "generate class name by using .htcpp filename in lowercase";
+    CMDLIME_ARG(input, fs::path)                                 << ".htcpp file to transpile";
+    CMDLIME_PARAM(output, fs::path)()                            << "output c++ file path\n(if empty, current working directory is used)";
+    CMDLIME_PARAM(className, std::string)()                      << "generated class name";
+    CMDLIME_FLAG(sharedLib)                                      << "generate result as shared library source files";
+    CMDLIME_FLAG(classPascalcase) << cmdlime::WithoutShortName{} << "generate class name by using .htcpp filename in PascalCase";
+    CMDLIME_FLAG(classSnakecase)  << cmdlime::WithoutShortName{} << "generate class name by using .htcpp filename in snake_case";
+    CMDLIME_FLAG(classLowercase)  << cmdlime::WithoutShortName{} << "generate class name by using .htcpp filename in lowercase";
 };
 fs::path getOutputFilePath(const Cfg& cfg);
 std::string getClassName(const Cfg& cfg);

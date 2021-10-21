@@ -1,33 +1,8 @@
 cmake_minimum_required(VERSION 3.18)
 project(hypertextcpp VERSION 1.0.0 DESCRIPTION "hypertextcpp")
 
-include(FetchContent)
-Set(FETCHCONTENT_QUIET FALSE)
-
-FetchContent_Declare(
-        cmdlime
-        GIT_REPOSITORY https://github.com/kamchatka-volcano/cmdlime.git
-        GIT_TAG        f71d8ba7658706fba92988451593728d5c874e28
-        GIT_SHALLOW    ON
-        GIT_PROGRESS TRUE
-)
-FetchContent_Declare(
-        gsl
-        GIT_REPOSITORY https://github.com/microsoft/GSL
-        GIT_TAG        v3.1.0
-        GIT_SHALLOW    ON
-        GIT_PROGRESS TRUE
-)
-
-FetchContent_MakeAvailable(cmdlime)
-
-#currently can't use MakeAvailable with gsl, as we need to disable its install target
-#by adding EXCLUDE_FROM_ALL argument
-FetchContent_GetProperties(gsl)
-if(NOT gsl_POPULATED)
-  FetchContent_Populate(gsl)
-  add_subdirectory("${gsl_SOURCE_DIR}" "${gsl_BINARY_DIR}" EXCLUDE_FROM_ALL)
-endif()
+include(external/cmdlime)
+include(external/gsl)
 
 set(SRC
     src/codenode.cpp
