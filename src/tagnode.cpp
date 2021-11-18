@@ -21,7 +21,8 @@ const NodeExtension& TagNode::extension() const
 void TagNode::load(StreamReader& stream)
 {        
     const auto nodePos = stream.position();
-    Expects(stream.read() == "<");
+    auto openSeq = stream.read();
+    Expects(openSeq == "<");
 
     while(!stream.atEnd()){
         if (name_.empty()){

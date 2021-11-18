@@ -24,7 +24,8 @@ const std::string& ProcedureNode::name() const
 void ProcedureNode::load(StreamReader& stream)
 {
     auto nodePos = stream.position();
-    Expects(stream.read(static_cast<int>(procedureName_.size()) + 4) == "#" + procedureName_ + "(){");
+    auto openSeq = stream.read(static_cast<int>(procedureName_.size()) + 4);
+    Expects(openSeq == "#" + procedureName_ + "(){");
 
     auto readText = std::string{};
     while (!stream.atEnd()){

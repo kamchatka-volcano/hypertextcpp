@@ -23,7 +23,8 @@ CodeNode::CodeNode(std::string nodeTypeName,
 void CodeNode::load(StreamReader& stream)
 {
     auto nodePos = stream.position();
-    Expects(stream.read(2) == std::string{} + idToken_ + openToken_);
+    auto openSeq = stream.read(2);
+    Expects(openSeq == std::string{} + idToken_ + openToken_);
     extension_ = readNodeExtension(stream);
 
     auto openParenthesisNum = 1;

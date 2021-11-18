@@ -21,7 +21,8 @@ const NodeExtension& SectionNode::extension() const
 void SectionNode::load(StreamReader& stream)
 {
     const auto nodePos = stream.position();
-    Expects(stream.read(2) == "[[");
+    auto openSeq = stream.read(2);
+    Expects(openSeq == "[[");
 
     extension_ = readNodeExtension(stream);
 
