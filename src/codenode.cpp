@@ -28,26 +28,21 @@ void CodeNode::load(StreamReader& stream)
     extension_ = readNodeExtension(stream);
 
     auto openParenthesisNum = 1;
-    auto insideString = false;
-    auto insideRawString = false;
-    auto insideChar = false;
+    auto insideString = char{0};
     auto lastStringPos = StreamReaderPosition{};
     while(!stream.atEnd()){
         auto res = stream.read();
-        if (res == "`") {
-            insideRawString = !insideRawString;
+        if (!insideString){
+            if (res == "'" || res == "`" || res == "\"")
+                insideString = res.front();
             lastStringPos = stream.position();
         }
-        if (res == "\"") {
-            insideString = !insideString;
-            lastStringPos = stream.position();
-        }
-        if (res == "'") {
-            insideChar = !insideChar;
+        else if (res.front() == insideString) {
+            insideString = 0;
             lastStringPos = stream.position();
         }
 
-        if (!insideString && !insideRawString && !insideChar){
+        if (!insideString){
             if (res.front() == openToken_)
                 openParenthesisNum++;
             else if (res.front() == closeToken_){
@@ -70,12 +65,12 @@ void CodeNode::load(StreamReader& stream)
         }
         content_ += res;
     }
-    if (insideString)
-        throw TemplateError{lastStringPos, "String isn't closed with '\"'"};
-    if (insideRawString)
-        throw TemplateError{lastStringPos, "String isn't closed with '`'"};
-    if (insideChar)
-        throw TemplateError{lastStringPos, "Char literal isn't closed with \"'\""};
+    if (insideString) {
+        if (insideString != '\'')
+            throw TemplateError{lastStringPos, std::string{"String isn't closed with '"} + insideString + "'"};
+        else
+            throw TemplateError{lastStringPos, "Char literal isn't closed with \"'\""};
+    }
 
     throw TemplateError{nodePos, nodeTypeName_ + " isn't closed with '" + closeToken_ + "'"};
 }

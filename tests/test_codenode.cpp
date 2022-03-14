@@ -114,8 +114,8 @@ TEST(StatementNode, Basic)
 TEST(StatementNode, BasicWithString)
 {
     test<htcpp::StatementNode>
-            ("${ auto a = 0; {auto str = `Hello {}`;} }",
-             " auto a = 0; {auto str = R\"(Hello {})\";} ");
+            ("${ auto a = 0; {auto str = `Hello world's{}`;} }",
+             " auto a = 0; {auto str = R\"(Hello world's{})\";} ");
 }
 
 TEST(GlobalStatementNode, Basic)
