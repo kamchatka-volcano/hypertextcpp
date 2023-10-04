@@ -1,8 +1,19 @@
 cmake_minimum_required(VERSION 3.18)
 project(hypertextcpp VERSION 1.0.0 DESCRIPTION "hypertextcpp")
 
-include(external/cmdlime)
-include(external/gsl)
+include(GNUInstallDirs)
+include(external/seal_lake)
+
+SealLake_Import(cmdlime 2.5.0
+        GIT_REPOSITORY https://github.com/kamchatka-volcano/cmdlime
+        GIT_TAG v2.5.0
+)
+
+SealLake_Import(gsl 4.0.0
+        GIT_REPOSITORY https://github.com/microsoft/GSL.git
+        GIT_TAG        v4.0.0
+)
+
 
 set(SRC
     src/codenode.cpp
@@ -19,21 +30,22 @@ set(SRC
     src/utils.cpp
     src/singleheadertranspiler.cpp
     src/sharedlibtranspiler.cpp)
-    
-add_executable(hypertextcpp ${SRC})
-target_compile_features(hypertextcpp PUBLIC cxx_std_17)
-set_target_properties(hypertextcpp PROPERTIES CXX_EXTENSIONS OFF)
 
-target_link_libraries(hypertextcpp PRIVATE cmdlime GSL)
 
-option(ENABLE_TESTS "Enable tests" OFF)
-if (ENABLE_TESTS)
-    enable_testing()
-    add_subdirectory(tests)
-endif()
+SealLake_Executable(
+        SOURCES ${SRC}
+        COMPILE_FEATURES cxx_std_20
+        PROPERTIES
+            CXX_EXTENSIONS OFF
+        INCLUDES ${SEAL_LAKE_SOURCE_range-v3}/include
+        LIBRARIES
+            cmdlime::cmdlime
+            Microsoft.GSL::GSL
+)
 
-include(GNUInstallDirs)
-install(TARGETS hypertextcpp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+SealLake_OptionalBuildSteps(tests)
+
+
 install(DIRECTORY shared_lib_api/include/hypertextcpp
         COMPONENT shared_lib_api
         EXCLUDE_FROM_ALL

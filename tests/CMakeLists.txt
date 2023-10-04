@@ -1,15 +1,6 @@
 cmake_minimum_required(VERSION 3.18)
 project(test_hypertextcpp)
 
-find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
-
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-
-include(CheckPIESupported)
-check_pie_supported()
-
 set(SRC
     test_codenode.cpp
     test_procedurenode.cpp
@@ -23,16 +14,22 @@ set(SRC
     ../src/nodeextension.cpp
     ../src/nodereader.cpp
     ../src/sectionnode.cpp
-    ../src/streamreader.cpp    
+    ../src/streamreader.cpp
     ../src/tagnode.cpp
     ../src/textnode.cpp
     ../src/transpiler.cpp
     ../src/utils.cpp
     )
-    
-add_executable(test_hypertextcpp ${SRC})
-target_compile_features(test_hypertextcpp PUBLIC cxx_std_17)
-set_target_properties(test_hypertextcpp PROPERTIES CXX_EXTENSIONS OFF POSITION_INDEPENDENT_CODE OFF)
-add_test(NAME test_hypertextcpp COMMAND test_hypertextcpp)
-target_include_directories(test_hypertextcpp PRIVATE ../src)
-target_link_libraries(test_hypertextcpp PRIVATE ${GTEST_BOTH_LIBRARIES} Threads::Threads GSL)
+
+SealLake_GoogleTest(
+        SOURCES ${SRC}
+        COMPILE_FEATURES cxx_std_20
+        PROPERTIES
+            CXX_EXTENSIONS OFF
+        INCLUDES
+            ../src
+            ${SEAL_LAKE_SOURCE_range-v3}/include
+        LIBRARIES
+            Microsoft.GSL::GSL
+)
+

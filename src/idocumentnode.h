@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <typeinfo>
 
 namespace htcpp{
 class StreamReader;

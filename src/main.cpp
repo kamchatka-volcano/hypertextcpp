@@ -3,7 +3,7 @@
 #include "errors.h"
 #include "nameutils.h"
 #include <cmdlime/config.h>
-#include <cmdlime/configreader.h>
+#include <cmdlime/commandlinereader.h>
 #include <filesystem>
 #include <iostream>
 #include <fstream>
@@ -26,31 +26,31 @@ std::string getClassName(const Cfg& cfg);
 std::unique_ptr<htcpp::Transpiler> makeTranspiler(const Cfg& cfg);
 }
 
-int main(int argc, char**argv)
+int run(const Cfg& cfg)
 {
-    auto cfg = Cfg{};
-    auto cfgReader = cmdlime::ConfigReader{cfg, "hypertextcpp"};
-    if (!cfgReader.readCommandLine(argc, argv))
-        return cfgReader.exitCode();
-
     auto result = std::string{};
     auto transpiler = makeTranspiler(cfg);
     try{
-        result = transpiler->process(cfg.input);
-        auto stream = std::ofstream{getOutputFilePath(cfg)};
-        stream << result;
+      result = transpiler->process(cfg.input);
+      auto stream = std::ofstream{getOutputFilePath(cfg)};
+      stream << result;
     }
     catch(const htcpp::Error& e)
     {
-        std::cerr << e.what() << std::endl;
-        return -1;
+      std::cerr << e.what() << std::endl;
+      return 1;
     }
     catch(const std::exception& e)
     {
-        std::cerr << "Unknown critical error:" << e.what() << std::endl;
-        return -1;
+      std::cerr << "Unknown critical error:" << e.what() << std::endl;
+      return 1;
     }
     return 0;
+}
+
+int main(int argc, char**argv)
+{
+    return cmdlime::CommandLineReader{"hypertextcpp"}.exec<Cfg>(argc, argv, run);
 }
 
 namespace {
