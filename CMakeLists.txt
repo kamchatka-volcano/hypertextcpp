@@ -1,12 +1,11 @@
 cmake_minimum_required(VERSION 3.18)
-project(hypertextcpp VERSION 1.0.0 DESCRIPTION "hypertextcpp")
+project(hypertextcpp VERSION 1.1.0 DESCRIPTION "hypertextcpp")
 
-include(GNUInstallDirs)
 include(external/seal_lake)
 
-SealLake_Import(cmdlime 2.5.0
+SealLake_Import(cmdlime 2.6.0
         GIT_REPOSITORY https://github.com/kamchatka-volcano/cmdlime
-        GIT_TAG v2.5.0
+        GIT_TAG dev
 )
 
 SealLake_Import(gsl 4.0.0
@@ -43,7 +42,7 @@ SealLake_Executable(
             Microsoft.GSL::GSL
 )
 
-SealLake_OptionalBuildSteps(tests)
+SealLake_OptionalSubProjects(tests)
 
 
 install(DIRECTORY shared_lib_api/include/hypertextcpp
