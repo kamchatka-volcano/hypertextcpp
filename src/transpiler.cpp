@@ -16,7 +16,7 @@ Transpiler::~Transpiler() = default;
 
 void Transpiler::parseTemplateFile(const fs::path& filePath)
 {    
-    auto fileStream = std::ifstream{filePath};
+    auto fileStream = std::ifstream{filePath, std::ios_base::binary};
     if (!fileStream.is_open())
         throw ParsingError("Can't open file " + filePath.string());
 

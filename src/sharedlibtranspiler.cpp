@@ -11,6 +11,16 @@ std::string SharedLibTranspiler::generateCode() const
     #include <iostream>
     #include <sstream>
 
+    #ifdef _WIN32
+      #ifdef HYPERTEXTCPP_EXPORT
+        #define HYPERTEXTCPP_API __declspec(dllexport)
+      #else
+        #define HYPERTEXTCPP_API __declspec(dllimport)
+      #endif
+    #else
+      #define HYPERTEXTCPP_API
+    #endif
+
     struct Template;
     namespace htcpp{
     class AllowRenderTag{
@@ -35,7 +45,7 @@ std::string SharedLibTranspiler::generateCode() const
     #define HTCPP_CONFIG(TCfg) using Cfg = TCfg;\
     struct TemplateRenderer{\
     void renderHTML(const Cfg& cfg, std::ostream& out, htcpp::AllowRenderTag) const;\
-    void renderHTMLPart([[maybe_unused]] const std::string& name, [[maybe_unused]]const Cfg& cfg, [[maybe_unused]]std::ostream& out, htcpp::AllowRenderTag) const;\
+    void renderHTMLPart(const std::string& name, const Cfg& cfg, std::ostream& out, htcpp::AllowRenderTag) const;\
     };\
     struct Template : public htcpp::ITemplate<Cfg>{\
         TemplateRenderer renderer_;\
@@ -73,13 +83,13 @@ std::string SharedLibTranspiler::generateCode() const
     };\
     \
     extern "C" \
-    htcpp::ITemplate<TCfg>* makeTemplate()\
+    HYPERTEXTCPP_API htcpp::ITemplate<TCfg>* makeTemplate()\
     {\
         return new Template;\
     }\
     \
     extern "C" \
-    void deleteTemplate(htcpp::ITemplate<TCfg>* ptr)\
+    HYPERTEXTCPP_API void deleteTemplate(htcpp::ITemplate<TCfg>* ptr)\
     {\
         delete ptr;\
     }\
@@ -109,8 +119,8 @@ std::string SharedLibTranspiler::generateCode() const
 
     result +=
             "void TemplateRenderer::renderHTMLPart(const std::string& name, const Cfg& cfg, std::ostream& out, htcpp::AllowRenderTag tag) const\n"
-            "{\n";
-
+            "{\n"
+            "(void)name; (void)cfg; (void)out; (void)tag;\n";
     for (const auto& procedure : procedureList_) {
         result += "if (name == \"" + procedure->name() + "\")\n";
         result += "    htcpp::" + procedure->name() + "(cfg, out, tag);";

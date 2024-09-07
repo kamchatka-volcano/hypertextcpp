@@ -13,6 +13,7 @@ std::string SingleHeaderTranspiler::generateCode() const
 {
     auto result = std::string{};
     result +=
+            "#pragma once\n"
             "#include <iostream>\n"
             "#include <sstream>\n";
 
@@ -45,7 +46,8 @@ std::string SingleHeaderTranspiler::generateCode() const
         template<typename TCfg>
         void renderHTML(TCfg& cfg, std::ostream& out, htcpp::AllowRenderTag tag) const
         {
-)";
+            (void)cfg; (void)out; (void)tag;
+        )";
 
     for (const auto& procedure : procedureList_)
         result += "auto " + procedure->name() + " = [&cfg, &out, tag]{ htcpp::" + procedure->name() + "(cfg, out, tag); return std::string{};};\n";
@@ -58,9 +60,10 @@ std::string SingleHeaderTranspiler::generateCode() const
 
     result += R"(
     template<typename TCfg>
-    void renderHTMLPart([[maybe_unused]] const std::string& name, [[maybe_unused]]const TCfg& cfg, [[maybe_unused]]std::ostream& out, htcpp::AllowRenderTag tag) const
+    void renderHTMLPart(const std::string& name, const TCfg& cfg, std::ostream& out, htcpp::AllowRenderTag tag) const
     {
-)";
+        (void)name; (void)cfg; (void)out; (void)tag;
+    )";
 
     for (const auto& procedure : procedureList_){
         result += "if (name == \"" + procedure->name() + "\")\n";

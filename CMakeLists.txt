@@ -13,7 +13,6 @@ SealLake_Import(gsl 4.0.0
         GIT_TAG        v4.0.0
 )
 
-
 set(SRC
     src/codenode.cpp
     src/main.cpp
@@ -42,8 +41,7 @@ SealLake_Executable(
             Microsoft.GSL::GSL
 )
 
-SealLake_OptionalSubProjects(tests)
-
+SealLake_OptionalSubProjects(tests examples)
 
 install(DIRECTORY shared_lib_api/include/hypertextcpp
         COMPONENT shared_lib_api
