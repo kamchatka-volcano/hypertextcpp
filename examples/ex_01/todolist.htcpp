@@ -1,4 +1,4 @@
-<html>	
+<html>
     <body>
         <h1>$(cfg.name)'s todo list:</h1>
         <p> No tasks found </p>?(cfg.tasks.empty())

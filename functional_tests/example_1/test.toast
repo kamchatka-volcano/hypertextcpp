@@ -1,0 +1,14 @@
+-Suite: examples
+
+-Check example #1:
+<html>
+    <body>
+        <h1>Bob's todo list:</h1>
+        
+        <ul>
+            <li>laundry</li><li>cooking</li>
+        </ul>
+    </body>
+</html>
+
+---

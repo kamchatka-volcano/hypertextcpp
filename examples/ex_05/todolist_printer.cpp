@@ -2,7 +2,6 @@
 #include <string>
 #include <vector>
 #include <filesystem>
-#include <iostream>
 
 struct PageParams{
     struct Task{
@@ -22,7 +21,6 @@ int main()
 #else
     const auto libFilename = std::string{"./libtodolist.so"};
 #endif
-    std::cout << std::filesystem::canonical(".").string();
     auto page = htcpp::loadTemplate<PageParams>(std::filesystem::canonical(libFilename).string());
     page->print(pageParams);
     return 0;

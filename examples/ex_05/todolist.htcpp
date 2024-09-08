@@ -14,7 +14,7 @@
 #taskList(){
     <li [[style="text-decoration: line-through;"]]?(task.isCompleted)>$(task.name)</li>@(auto task : cfg.tasks)
 }
-<html>	
+<html>
     <body>
         <h1>$(cfg.name)'s todo list:</h1>
         <p> No tasks found </p>?(cfg.tasks.empty())
