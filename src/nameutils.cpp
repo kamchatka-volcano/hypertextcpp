@@ -1,5 +1,7 @@
 #include "nameutils.h"
+#include <sfun/string_utils.h>
 #include <algorithm>
+
 
 namespace htcpp::utils{
 namespace{
@@ -16,17 +18,6 @@ std::string formatName(const std::string& name)
     result.erase(std::find_if(result.rbegin(), result.rend(),
         [](int ch){ return std::isalnum(ch);}).base(), result.end());
     return result;
-}
-
-std::string replace(const std::string &str, const std::string &subStr, const std::string &val)
-{
-    std::string res = std::string(str);
-    auto pos = res.find(subStr);
-    while (pos != std::string::npos){
-        res.replace(pos, subStr.size(), val);
-        pos = res.find(subStr, pos + val.size());
-    }
-    return res;
 }
 
 }
@@ -57,7 +48,7 @@ std::string toPascalCase(const std::string& name)
 std::string toSnakeCase(const std::string& name)
 {
     auto result = std::string{};
-    auto formattedName = formatName(replace(name, "-", "_"));
+    auto formattedName = formatName(sfun::replace(name, "-", "_"));
     if (!formattedName.empty())
         formattedName[0] = static_cast<char>(std::tolower(formattedName[0]));
     for (auto ch : formattedName){

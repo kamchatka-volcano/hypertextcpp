@@ -47,7 +47,7 @@ std::unique_ptr<IDocumentNode> readNonTagNode(StreamReader& stream)
     return readCommonNodes(stream);
 }
 
-std::unique_ptr<GlobalStatementNode> readGlobalStatement(StreamReader& stream)
+std::unique_ptr<IDocumentNode> readGlobalStatement(StreamReader& stream)
 {
     if (stream.atEnd())
         return nullptr;

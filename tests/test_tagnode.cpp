@@ -1,4 +1,6 @@
 #include "assert_exception.h"
+#include "idocumentnoderenderer.h"
+#include "node_utils.h"
 #include <gtest/gtest.h>
 #include <errors.h>
 #include <tagnode.h>
@@ -12,8 +14,11 @@ void test(const std::string& input, const std::string& expected)
     auto stream = std::istringstream{input};
     auto streamReader = htcpp::StreamReader{stream};
     auto funcMap = std::map<std::string, std::string>{};
-    auto node = htcpp::TagNode{streamReader};
-    auto result = node.renderingCode();
+    auto tagNode = htcpp::TagNode{streamReader};
+    auto nodes = htcpp::optimizeNodes(tagNode.flatten());
+    auto result = std::string{};
+    for (auto& node : nodes)
+        result += node->interface<htcpp::IDocumentNodeRenderer>()->renderingCode();
     EXPECT_EQ(result, expected);
 }
 
@@ -36,95 +41,89 @@ void testError(const std::string& input, const std::string& expectedErrorMsg)
 TEST(TagNode, BasicNoAttributes)
 {
     test("<p> Hello world! </p>",
-         "out << \"<p\";out << \">\";out << R\"( Hello world! )\";out << \"</p>\";");
+         "out << R\"(<p> Hello world! </p>)\";");
 }
 
 TEST(TagNode, Basic)
 {
     test("<div id=\"9\"> Hello world! </div>",
-         "out << \"<div\";out << R\"( id=\"9\")\";out << \">\";out << R\"( Hello world! )\";out << \"</div>\";");
+         "out << R\"(<div id=\"9\"> Hello world! </div>)\";");
 }
 
 TEST(TagNode, BasicWithConditionalExtension)
 {
     test("<div id=\"9\">?(isVisible) Hello world! </div>",
-         "if (isVisible){ out << \"<div\";out << R\"( id=\"9\")\";out << \">\";out "
-         "<< R\"( Hello world! )\";out << \"</div>\"; } ");
+         "if (isVisible){ out << R\"(<div id=\"9\"> Hello world! </div>)\"; } ");
 }
 
 TEST(TagNode, BasicWithConditionalExtensionOnClosingTag)
 {
     test("<div id=\"9\">Hello world! </div>?(isVisible)",
-         "if (isVisible){ out << \"<div\";out << R\"( id=\"9\")\";out << \">\";out "
-         "<< R\"(Hello world! )\";out << \"</div>\"; } ");
+         "if (isVisible){ out << R\"(<div id=\"9\">Hello world! </div>)\"; } ");
 }
 
 TEST(TagNode, BasicWithLoopExtension)
 {
     test("<div id=\"9\">@(auto i = 0; i < 5; ++i) Hello world! </div>",
-         "for (auto i = 0; i < 5; ++i){ out << \"<div\";out << R\"( id=\"9\")\";out << \">\";out "
-         "<< R\"( Hello world! )\";out << \"</div>\"; } ");
+         "for (auto i = 0; i < 5; ++i){ out << R\"(<div id=\"9\"> Hello world! </div>)\"; } ");
 }
 
 TEST(TagNode, BasicWithLoopExtensionOnClosingTag)
 {
     test("<div id=\"9\">Hello world! </div>@(auto i = 0; i < 5; ++i)",
-         "for (auto i = 0; i < 5; ++i){ out << \"<div\";out << R\"( id=\"9\")\";out << \">\";out "
-         "<< R\"(Hello world! )\";out << \"</div>\"; } ");
+         "for (auto i = 0; i < 5; ++i){ out << R\"(<div id=\"9\">Hello world! </div>)\"; } ");
 }
 
 TEST(TagNode, WithOtherNodes)
 {
     test("<a href=\"$(cfg.url)\" [[class=\"visible\"]]?(isVisible)></a>",
-         "out << \"<a\";out << R\"( href=\")\";out << (cfg.url);out << R\"(\" )\";if (isVisible){ out "
-         "<< R\"(class=\"visible\")\"; } out << \">\";out << \"</a>\";");
+         "out << R\"(<a href=\")\";out << (cfg.url);out << R\"(\" )\";if (isVisible){ out << R\"(class=\"visible\")\"; "
+         "} out << R\"(></a>)\";");
 }
 
 
 TEST(TagNode, NestedWithAttributes)
 {
     test("<div id=\"9\"> <p>Hello world!</p> </div>",
-         "out << \"<div\";out << R\"( id=\"9\")\";out << \">\";out << R\"( )\";out << \"<p\";out << \">\";out"
-         " << R\"(Hello world!)\";out << \"</p>\";out << R\"( )\";out << \"</div>\";");
+         "out << R\"(<div id=\"9\"> <p>Hello world!</p> </div>)\";");
 }
 
 TEST(TagNode, NestedWithAttributesWithConditionalExtension)
 {
     test("<div id=\"9\">?(isVisible) <p>?(isVisible)Hello world!</p> </div>",
-         "if (isVisible){ out << \"<div\";out << R\"( id=\"9\")\";out << \">\";out << R\"( )\";if (isVisible){ out"
-         " << \"<p\";out << \">\";out << R\"(Hello world!)\";out << \"</p>\"; } out << R\"( )\";out << \"</div>\"; } ");
+         "if (isVisible){ out << R\"(<div id=\"9\"> )\";if (isVisible){ out << R\"(<p>Hello world!</p>)\"; } out << "
+         "R\"( </div>)\"; } ");
 }
 
 TEST(TagNode, NestedWithAttributesWithLoopExtension)
 {
     test("<div id=\"9\">@(auto i = 0; i < 5; ++i) <p>@(auto i = 0; i < 5; ++i)Hello world!</p> </div>",
-         "for (auto i = 0; i < 5; ++i){ out << \"<div\";out << R\"( id=\"9\")\";out << \">\";out "
-         "<< R\"( )\";for (auto i = 0; i < 5; ++i){ out << \"<p\";out << \">\";out "
-         "<< R\"(Hello world!)\";out << \"</p>\"; } out << R\"( )\";out << \"</div>\"; } ");
+         "for (auto i = 0; i < 5; ++i){ out << R\"(<div id=\"9\"> )\";for (auto i = 0; i < 5; ++i){ out << "
+         "R\"(<p>Hello world!</p>)\"; } out << R\"( </div>)\"; } ");
 }
 
 TEST(TagNode, EmptyElementNoAttributes)
 {
     test("<br>",
-         "out << \"<br\";out << \">\";");
+         "out << R\"(<br>)\";");
 }
 
 TEST(TagNode, EmptyElement)
 {
     test("<img src=\"1.jpg\">",
-         "out << \"<img\";out << R\"( src=\"1.jpg\")\";out << \">\";");
+         "out << R\"(<img src=\"1.jpg\">)\";");
 }
 
 TEST(TagNode, EmptyElementWithConditionalExtension)
 {
     test("<img src=\"1.jpg\">?(isVisible)",
-         "if (isVisible){ out << \"<img\";out << R\"( src=\"1.jpg\")\";out << \">\"; } ");
+         "if (isVisible){ out << R\"(<img src=\"1.jpg\">)\"; } ");
 }
 
 TEST(TagNode, EmptyElementWithLoopExtension)
 {
     test("<img src=\"1.jpg\">@(auto i = 0; i < 5; ++i)",
-         "for (auto i = 0; i < 5; ++i){ out << \"<img\";out << R\"( src=\"1.jpg\")\";out << \">\"; } ");
+         "for (auto i = 0; i < 5; ++i){ out << R\"(<img src=\"1.jpg\">)\"; } ");
 }
 
 TEST(InvalidTagNode, UnclosedTag)

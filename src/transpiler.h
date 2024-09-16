@@ -1,4 +1,5 @@
 #pragma once
+#include <sfun/member.h>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -7,29 +8,27 @@
 namespace htcpp{
 namespace fs = std::filesystem;
 class IDocumentNode;
+class ITranspilerRenderer;
 class GlobalStatementNode;
 class ProcedureNode;
 class StreamReader;
 
-class Transpiler{
+class Transpiler final{
 public:
-    Transpiler();
-    virtual ~Transpiler();
+    explicit Transpiler(ITranspilerRenderer&);
     std::string process(const fs::path& filePath);
 
 private:
     bool readNode(StreamReader& stream);
     void parseTemplateFile(const fs::path& filePath);
-    virtual std::string generateCode() const = 0;
-
-protected:
-    std::vector<std::unique_ptr<IDocumentNode>> nodeList_;
-    std::vector<std::unique_ptr<GlobalStatementNode>> globalStatementList_;
-    std::vector<std::unique_ptr<ProcedureNode>> procedureList_;
+    void reset();
 
 private:
+    sfun::member<const ITranspilerRenderer&> renderer_;
     std::string readText_;
-
+    std::vector<std::unique_ptr<IDocumentNode>> nodeList_;
+    std::vector<std::unique_ptr<IDocumentNode>> globalStatementList_;
+    std::vector<std::unique_ptr<ProcedureNode>> procedureList_;
 };
 
 }

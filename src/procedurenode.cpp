@@ -1,10 +1,11 @@
 #include "procedurenode.h"
-#include "streamreader.h"
 #include "errors.h"
-#include "utils.h"
+#include "idocumentnoderenderer.h"
 #include "nodereader.h"
+#include "streamreader.h"
+#include "utils.h"
+#include "node_utils.h"
 #include <gsl/gsl>
-
 
 namespace htcpp{
 
@@ -32,6 +33,7 @@ void ProcedureNode::load(StreamReader& stream)
         if (stream.peek() == "}"){
             stream.skip(1);
             utils::consumeReadText(readText, contentNodes_);
+            contentNodes_ = optimizeNodes(flattenNodes(std::move(contentNodes_)));
             return;
         }
         auto node = readNonTagNode(stream);
@@ -45,11 +47,11 @@ void ProcedureNode::load(StreamReader& stream)
     throw TemplateError{nodePos, "Procedure isn't closed with '}'"};
 }
 
-std::string ProcedureNode::renderingCode()
+std::string ProcedureNode::renderingCode() const
 {
     auto result = std::string{};
     for (auto& node : contentNodes_)
-        result += node->renderingCode();
+        result += node->interface<IDocumentNodeRenderer>()->renderingCode();
     return result;
 }
 

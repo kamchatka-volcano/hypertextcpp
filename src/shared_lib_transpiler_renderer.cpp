@@ -1,10 +1,13 @@
-#include "sharedlibtranspiler.h"
 #include "codenode.h"
+#include "idocumentnoderenderer.h"
 #include "procedurenode.h"
+#include "shared_lib_transpiler_renderer.h"
 
 namespace htcpp{
 
-std::string SharedLibTranspiler::generateCode() const
+std::string SharedLibTranspilerRenderer::generateCode(const std::vector<gsl::not_null<IDocumentNodeRenderer*>>& globalStatements,
+                                                      const std::vector<std::unique_ptr<ProcedureNode>>& procedures,
+                                                      const std::vector<gsl::not_null<IDocumentNodeRenderer*>>& nodes) const
 {
     auto result = std::string{R"(
     #include <string>
@@ -95,11 +98,11 @@ std::string SharedLibTranspiler::generateCode() const
     }\
 
     )"};
-    for (const auto& globalStatement : globalStatementList_)
+    for (const auto& globalStatement : globalStatements)
         result += globalStatement->renderingCode() + "\n";
 
     result += "namespace htcpp{\n";
-    for (const auto& procedure : procedureList_) {
+    for (const auto& procedure : procedures) {
         result += "void " + procedure->name() + "(const Cfg& cfg, std::ostream& out, AllowRenderTag){\n";
         result += procedure->renderingCode() + "\n}\n";
     }
@@ -109,11 +112,11 @@ std::string SharedLibTranspiler::generateCode() const
     result +=
             "void TemplateRenderer::renderHTML(const Cfg& cfg, std::ostream& out, htcpp::AllowRenderTag tag) const\n"
             "{\n";
-    for (const auto& procedure : procedureList_)
+    for (const auto& procedure : procedures)
         result += "auto " + procedure->name() + " = [&cfg, &out, tag]{htcpp::" + procedure->name() +
                   "(cfg, out, tag); return std::string{};};\n";
 
-    for (auto& node : nodeList_)
+    for (auto& node : nodes)
         result += node->renderingCode();
     result += "\n}\n";
 
@@ -121,7 +124,7 @@ std::string SharedLibTranspiler::generateCode() const
             "void TemplateRenderer::renderHTMLPart(const std::string& name, const Cfg& cfg, std::ostream& out, htcpp::AllowRenderTag tag) const\n"
             "{\n"
             "(void)name; (void)cfg; (void)out; (void)tag;\n";
-    for (const auto& procedure : procedureList_) {
+    for (const auto& procedure : procedures) {
         result += "if (name == \"" + procedure->name() + "\")\n";
         result += "    htcpp::" + procedure->name() + "(cfg, out, tag);";
     }

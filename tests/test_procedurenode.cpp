@@ -36,7 +36,7 @@ TEST(ProcedureNode, Basic)
 {
     test("#hello_world(){ <p>Hello World! </p> }",
          "hello_world",
-         "out << R\"( )\";out << \"<p\";out << \">\";out << R\"(Hello World! )\";out << \"</p>\";out << R\"( )\";");
+         "out << R\"( <p>Hello World! </p> )\";");
 }
 
 

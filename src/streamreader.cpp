@@ -14,7 +14,7 @@ std::string StreamReader::read(int size)
     auto result = std::string{};
     auto ch = char{};
     for (auto i = 0; i < size; ++i){
-        if (!stream_.get(ch))
+        if (!stream_.get().get(ch))
             return {};
         if (ch == '\n'){
             position_.line++;
@@ -33,16 +33,16 @@ std::string StreamReader::peek(int size)
 { 
     auto result = std::string{};
     auto ch = char{};
-    auto pos = stream_.tellg();
+    auto pos = stream_.get().tellg();
     for (auto i = 0; i < size; ++i){        
-        if (!stream_.get(ch)){
-            stream_.clear();
+        if (!stream_.get().get(ch)){
+            stream_.get().clear();
             result.clear();
             break;
         }
         result.push_back(ch);
     }    
-    stream_.seekg(pos);
+    stream_.get().seekg(pos);
     return result;
 }
 

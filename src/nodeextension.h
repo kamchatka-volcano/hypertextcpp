@@ -1,34 +1,30 @@
 #pragma once
+#include <optional>
 #include <string>
 
-namespace htcpp{
+namespace htcpp {
 class StreamReader;
 
-class NodeExtension{
+class NodeExtension {
 public:
-    enum class Type{
+    enum class Type {
         Conditional,
-        Loop,        
-        None
+        Loop
     };
-    NodeExtension();
-    std::string docTemplate() const;
-    bool isEmpty() const;
 
     Type type() const;
     const std::string& content() const;
 
 private:
-    NodeExtension(Type type,
-                  std::string content);
+    NodeExtension(Type type, std::string content);
 
 private:
-    Type type_ = Type::None;
+    Type type_;
     std::string content_;
 
-friend NodeExtension readNodeExtension(StreamReader& stream);
+    friend std::optional<NodeExtension> readNodeExtension(StreamReader& stream);
 };
 
-NodeExtension readNodeExtension(StreamReader& stream);
+std::optional<NodeExtension> readNodeExtension(StreamReader& stream);
 
-}
+} //namespace htcpp

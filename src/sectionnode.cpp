@@ -1,7 +1,9 @@
 #include "sectionnode.h"
-#include "streamreader.h"
+#include "control_flow_statement_node.h"
 #include "errors.h"
+#include "idocumentnoderenderer.h"
 #include "nodereader.h"
+#include "streamreader.h"
 #include "textnode.h"
 #include "utils.h"
 #include <gsl/gsl>
@@ -11,11 +13,6 @@ namespace htcpp{
 SectionNode::SectionNode(StreamReader& stream)
 {
     load(stream);
-}
-
-const NodeExtension& SectionNode::extension() const
-{
-    return extension_;
 }
 
 void SectionNode::load(StreamReader& stream)
@@ -33,8 +30,8 @@ void SectionNode::load(StreamReader& stream)
             utils::consumeReadText(readText, contentNodes_);
             const auto extensionPos = stream.position();
             const auto closingBracesExtension = readNodeExtension(stream);
-            if (!closingBracesExtension.isEmpty()){
-                if (!extension_.isEmpty())
+            if (closingBracesExtension.has_value()){
+                if (extension_.has_value())
                     throw TemplateError{extensionPos, "Section can't have multiple extensions"};
                 extension_ = closingBracesExtension;
             }
@@ -53,19 +50,20 @@ void SectionNode::load(StreamReader& stream)
     throw TemplateError{nodePos, "Section isn't closed with ']]'"};
 }
 
-std::string SectionNode::renderingCode()
+std::vector<std::unique_ptr<IDocumentNode>> SectionNode::flatten()
 {
-    auto result = std::string{};
-    if (!extension_.isEmpty()){
-        if (extension_.type() == NodeExtension::Type::Conditional)
-            result += "if (" + extension_.content() + "){ ";
-        else if (extension_.type() == NodeExtension::Type::Loop)
-            result += "for (" + extension_.content() + "){ ";
+    auto result = std::vector<std::unique_ptr<IDocumentNode>>{};
+    if (extension_.has_value())
+        result.emplace_back(std::make_unique<ControlFlowStatementNode>(ControlFlowStatementNodeType::Open, extension_.value()));
+    for (auto& node : contentNodes_) {
+        if (auto nodeCollection = node->interface<INodeCollection>())
+            std::ranges::move(nodeCollection->flatten(), std::back_inserter(result));
+        else
+            result.emplace_back(std::move(node));
     }
-    for (auto& node : contentNodes_)
-        result += node->renderingCode();
-    if (!extension_.isEmpty())
-        result += " } ";
+    if (extension_.has_value())
+        result.emplace_back(std::make_unique<ControlFlowStatementNode>(ControlFlowStatementNodeType::Close, extension_.value()));
+
     return result;
 }
 

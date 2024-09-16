@@ -1,12 +1,13 @@
-#include "singleheadertranspiler.h"
-#include "sharedlibtranspiler.h"
 #include "errors.h"
 #include "nameutils.h"
-#include <cmdlime/config.h>
+#include "transpiler.h"
+#include "shared_lib_transpiler_renderer.h"
+#include "single_header_transpiler_renderer.h"
 #include <cmdlime/commandlinereader.h>
+#include <cmdlime/config.h>
 #include <filesystem>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <memory>
 
 namespace fs = std::filesystem;
@@ -23,15 +24,16 @@ struct Cfg : public cmdlime::Config{
 };
 fs::path getOutputFilePath(const Cfg& cfg);
 std::string getClassName(const Cfg& cfg);
-std::unique_ptr<htcpp::Transpiler> makeTranspiler(const Cfg& cfg);
+std::unique_ptr<htcpp::ITranspilerRenderer> makeTranspilerRenderer(const Cfg& cfg);
 }
 
 int run(const Cfg& cfg)
 {
     auto result = std::string{};
-    auto transpiler = makeTranspiler(cfg);
+    auto transpilerRenderer = makeTranspilerRenderer(cfg);
+    auto transpiler = htcpp::Transpiler{*transpilerRenderer};
     try{
-      result = transpiler->process(cfg.input);
+      result = transpiler.process(cfg.input);
       auto stream = std::ofstream{getOutputFilePath(cfg)};
       stream << result;
     }
@@ -87,12 +89,12 @@ std::string getClassName(const Cfg& cfg)
     return result;
 }
 
-std::unique_ptr<htcpp::Transpiler> makeTranspiler(const Cfg& cfg)
+std::unique_ptr<htcpp::ITranspilerRenderer> makeTranspilerRenderer(const Cfg& cfg)
 {
     if (cfg.sharedLib)
-        return std::make_unique<htcpp::SharedLibTranspiler>();
+        return std::make_unique<htcpp::SharedLibTranspilerRenderer>();
     else
-        return std::make_unique<htcpp::SingleHeaderTranspiler>(getClassName(cfg));
+        return std::make_unique<htcpp::SingleHeaderTranspilerRenderer>(getClassName(cfg));
 }
 
 }

@@ -1,4 +1,6 @@
 #include "assert_exception.h"
+#include "node_utils.h"
+#include "idocumentnoderenderer.h"
 #include <gtest/gtest.h>
 #include <errors.h>
 #include <sectionnode.h>
@@ -10,8 +12,11 @@ void test(const std::string& input, const std::string& expected)
 {
     auto stream = std::istringstream{input};
     auto streamReader = htcpp::StreamReader{stream};
-    auto node = htcpp::SectionNode{streamReader};
-    auto result = node.renderingCode();
+    auto sectionNode = htcpp::SectionNode{streamReader};
+    auto nodes = htcpp::optimizeNodes(sectionNode.flatten());
+    auto result = std::string{};
+    for (auto& node : nodes)
+        result += node->interface<htcpp::IDocumentNodeRenderer>()->renderingCode();
     EXPECT_EQ(result, expected);
 }
 
@@ -64,23 +69,21 @@ TEST(SectionNode, BasicWithLoopExtensionOnClosingBraces)
 TEST(SectionNode, Nested)
 {
     test("[[ Hello <p>world</p> [[!]] ]]",
-         "out << R\"( Hello )\";out << \"<p\";out << \">\";out << R\"(world)\";out << \"</p>\";"
-         "out << R\"( )\";out << R\"(!)\";out << R\"( )\";");
+         "out << R\"( Hello <p>world</p> ! )\";");
 }
 
 TEST(SectionNode, NestedWithConditionalExtension)
 {
     test("[[ Hello <p>?(isVisible)world</p> [[!]]?(isVisible) ]]?(isVisible)",
-         "if (isVisible){ out << R\"( Hello )\";if (isVisible){ out << \"<p\";out << \">\";out << R\"(world)\";"
-         "out << \"</p>\"; } out << R\"( )\";if (isVisible){ out << R\"(!)\"; } out << R\"( )\"; } ");
+         "if (isVisible){ out << R\"( Hello )\";if (isVisible){ out << R\"(<p>world</p>)\"; } out << R\"( )\";if "
+         "(isVisible){ out << R\"(!)\"; } out << R\"( )\"; } ");
 }
 
 TEST(SectionNode, NestedWithLoopExtension)
 {
     test("[[ Hello <p>@(auto i = 0; i < 5; ++i)world</p> [[!]]@(auto i = 0; i < 3; ++i) ]]@(auto i = 0; i < 5; ++i)",
-         "for (auto i = 0; i < 5; ++i){ out << R\"( Hello )\";for (auto i = 0; i < 5; ++i){ out << \"<p\";out << \">\";"
-         "out << R\"(world)\";out << \"</p>\"; } out << R\"( )\";"
-         "for (auto i = 0; i < 3; ++i){ out << R\"(!)\"; } out << R\"( )\"; } ");
+         "for (auto i = 0; i < 5; ++i){ out << R\"( Hello )\";for (auto i = 0; i < 5; ++i){ out << "
+         "R\"(<p>world</p>)\"; } out << R\"( )\";for (auto i = 0; i < 3; ++i){ out << R\"(!)\"; } out << R\"( )\"; } ");
 }
 
 

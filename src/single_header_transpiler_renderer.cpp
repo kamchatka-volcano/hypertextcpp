@@ -1,15 +1,19 @@
-#include "singleheadertranspiler.h"
+#include "single_header_transpiler_renderer.h"
 #include "codenode.h"
+#include "idocumentnoderenderer.h"
 #include "procedurenode.h"
 
 namespace htcpp{
 
-SingleHeaderTranspiler::SingleHeaderTranspiler(std::string className)
+SingleHeaderTranspilerRenderer::SingleHeaderTranspilerRenderer(std::string className)
         : className_(std::move(className))
 {
 }
 
-std::string SingleHeaderTranspiler::generateCode() const
+std::string SingleHeaderTranspilerRenderer::generateCode(
+        const std::vector<gsl::not_null<IDocumentNodeRenderer*>>& globalStatements,
+        const std::vector<std::unique_ptr<ProcedureNode>>& procedures,
+        const std::vector<gsl::not_null<IDocumentNodeRenderer*>>& nodes) const
 {
     auto result = std::string{};
     result +=
@@ -28,10 +32,10 @@ std::string SingleHeaderTranspiler::generateCode() const
     };
     })";
 
-    for(const auto& globalStatement : globalStatementList_)
+    for(const auto& globalStatement : globalStatements)
         result += globalStatement->renderingCode() + "\n";
 
-    for (const auto& procedure : procedureList_){
+    for (const auto& procedure : procedures){
         result += "namespace htcpp{\n";
         result += "template <typename TCfg>\n";
         result += "inline void " + procedure->name() + "(const TCfg& cfg, std::ostream& out, AllowRenderTag){\n";
@@ -49,10 +53,10 @@ std::string SingleHeaderTranspiler::generateCode() const
             (void)cfg; (void)out; (void)tag;
         )";
 
-    for (const auto& procedure : procedureList_)
+    for (const auto& procedure : procedures)
         result += "auto " + procedure->name() + " = [&cfg, &out, tag]{ htcpp::" + procedure->name() + "(cfg, out, tag); return std::string{};};\n";
 
-    for(const auto& node : nodeList_)
+    for(const auto& node : nodes)
         result += node->renderingCode();
 
     result +=
@@ -65,7 +69,7 @@ std::string SingleHeaderTranspiler::generateCode() const
         (void)name; (void)cfg; (void)out; (void)tag;
     )";
 
-    for (const auto& procedure : procedureList_){
+    for (const auto& procedure : procedures){
         result += "if (name == \"" + procedure->name() + "\")\n";
         result += "htcpp::" + procedure->name() + "(cfg, out, tag);";
     }

@@ -16,17 +16,11 @@ std::string nodeExtensionName(NodeExtension::Type type)
 }
 }
 
-NodeExtension::NodeExtension() = default;
 NodeExtension::NodeExtension(NodeExtension::Type type,
                              std::string content)
     : type_(type)
     , content_(std::move(content))
 {    
-}
-
-bool NodeExtension::isEmpty() const
-{
-    return type_ == Type::None;
 }
 
 NodeExtension::Type NodeExtension::type() const
@@ -39,29 +33,20 @@ const std::string& NodeExtension::content() const
     return content_;
 }
 
-std::string NodeExtension::docTemplate() const
-{
-    switch(type_){
-    case NodeExtension::Type::Conditional : return "?(" + content_ + ")";
-    case NodeExtension::Type::Loop: return "@(" + content_ + ")";    
-    default: return {};
-    }
-}
-
-NodeExtension readNodeExtension(StreamReader& stream)
+std::optional<NodeExtension> readNodeExtension(StreamReader& stream)
 {
     const auto nodePos = stream.position();
     const auto nextChars = stream.peek(2);
-    auto extensionType = NodeExtension::Type::None;
     if (nextChars.empty())
-        return {};
+        return std::nullopt;
+
+    auto extensionType = NodeExtension::Type{};
     if (nextChars == "?(")
         extensionType = NodeExtension::Type::Conditional;
     else if (nextChars == "@(")
         extensionType = NodeExtension::Type::Loop;
-
-    if (extensionType == NodeExtension::Type::None)
-        return{};
+    else
+        return std::nullopt;
 
     stream.skip(2);
     auto openParenthesisNum = 1;
@@ -75,7 +60,7 @@ NodeExtension readNodeExtension(StreamReader& stream)
             if (openParenthesisNum == 0){
                 if (utils::isBlank(extensionContent))
                     throw TemplateError{nodePos, nodeExtensionName(extensionType) + " can't be empty"};
-                return {extensionType, extensionContent};
+                return NodeExtension{extensionType, extensionContent};
             }
         }
         extensionContent += res;

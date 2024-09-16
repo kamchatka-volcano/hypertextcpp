@@ -19,6 +19,8 @@ set(SRC
     ../src/textnode.cpp
     ../src/transpiler.cpp
     ../src/utils.cpp
+    ../src/node_utils.cpp
+        ../src/control_flow_statement_node.cpp
     )
 
 SealLake_GoogleTest(
@@ -31,5 +33,6 @@ SealLake_GoogleTest(
             ${SEAL_LAKE_SOURCE_range-v3}/include
         LIBRARIES
             Microsoft.GSL::GSL
+            sfun::sfun
 )
 

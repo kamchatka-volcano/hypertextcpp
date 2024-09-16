@@ -50,8 +50,8 @@ void CodeNode::load(StreamReader& stream)
                 if (openParenthesisNum == 0){
                     const auto extensionPos = stream.position();
                     const auto closingTokenExtension = readNodeExtension(stream);
-                    if (!closingTokenExtension.isEmpty()){
-                        if (!extension_.isEmpty())
+                    if (closingTokenExtension.has_value()){
+                        if (extension_.has_value())
                             throw TemplateError{extensionPos, nodeTypeName_ + " can't have multiple extensions"};
                         extension_ = closingTokenExtension;
                     }
@@ -75,24 +75,52 @@ void CodeNode::load(StreamReader& stream)
     throw TemplateError{nodePos, nodeTypeName_ + " isn't closed with '" + closeToken_ + "'"};
 }
 
-std::string CodeNode::renderingCode()
+const std::string& CodeNode::content() const
 {
     return content_;
 }
 
-std::string ExpressionNode::renderingCode()
+const std::optional<NodeExtension>& CodeNode::extension() const
+{
+    return extension_;
+}
+
+std::string ExpressionNode::renderingCode() const
 {
     auto result = std::string{};
-    if (!extension_.isEmpty()){
-        if (extension_.type() == NodeExtension::Type::Conditional)
-            result += "if (" + extension_.content() + "){ ";
-        else if (extension_.type() == NodeExtension::Type::Loop)
-            result += "for (" + extension_.content() + "){ ";
+    const auto& extension = impl_.extension();
+    if (extension.has_value()){
+        if (extension.value().type() == NodeExtension::Type::Conditional)
+            result += "if (" + extension.value().content() + "){ ";
+        else if (extension.value().type() == NodeExtension::Type::Loop)
+            result += "for (" + extension.value().content() + "){ ";
     }
-    result += "out << (" + content_ + ");";
-    if (!extension_.isEmpty())
+    result += "out << (" + impl_.content() + ");";
+    if (extension.has_value())
         result += " } ";
     return result;
+}
+
+ExpressionNode::ExpressionNode(StreamReader& stream)
+    : impl_("Expression", '$', '(', ')', stream)
+{}
+
+StatementNode::StatementNode(StreamReader& stream)
+    :impl_("Statement", '$', '{', '}', stream)
+{}
+
+std::string StatementNode::renderingCode() const
+{
+    return impl_.content();
+}
+
+GlobalStatementNode::GlobalStatementNode(StreamReader& stream)
+    : impl_("Global statement", '#', '{', '}', stream)
+{}
+
+std::string GlobalStatementNode::renderingCode() const
+{
+    return impl_.content();
 }
 
 }

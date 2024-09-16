@@ -1,56 +1,53 @@
 #include "tagnode.h"
-#include "textnode.h"
-#include "streamreader.h"
-#include "nodereader.h"
+#include "control_flow_statement_node.h"
 #include "errors.h"
+#include "nodereader.h"
+#include "streamreader.h"
+#include "textnode.h"
 #include "utils.h"
 #include <gsl/gsl>
+#include <algorithm>
 
-namespace htcpp{
+namespace htcpp {
 
 TagNode::TagNode(StreamReader& stream)
 {
     load(stream);
 }
 
-const NodeExtension& TagNode::extension() const
-{
-    return extension_;
-}
-
 void TagNode::load(StreamReader& stream)
-{        
+{
     const auto nodePos = stream.position();
     auto openSeq = stream.read();
     Expects(openSeq == "<");
 
-    while(!stream.atEnd()){
-        if (name_.empty()){
+    while (!stream.atEnd()) {
+        if (name_.empty()) {
             if (readName(stream, nodePos) == ReadResult::ParsingCompleted)
                 return;
             continue;
         }
-        if (!attributesRead_){
+        if (!attributesRead_) {
             if (readAttributes(stream) == ReadResult::ParsingCompleted)
                 return;
             continue;
         }
         const auto closingTag = "</" + name_ + ">";
         const auto closingTagSize = static_cast<int>(closingTag.size());
-        if (stream.peek(closingTagSize) == closingTag){
+        if (stream.peek(closingTagSize) == closingTag) {
             utils::consumeReadText(readText_, contentNodes_);
             stream.skip(closingTagSize);
             const auto extensionPos = stream.position();
             const auto closingTagExtension = readNodeExtension(stream);
-            if (!closingTagExtension.isEmpty()){
-                if (!extension_.isEmpty())
+            if (closingTagExtension.has_value()) {
+                if (extension_.has_value())
                     throw TemplateError{extensionPos, "Tag can't have multiple extensions"};
                 extension_ = closingTagExtension;
             }
             return;
-        }        
+        }
         auto node = readTagContentNode(stream);
-        if (node){
+        if (node) {
             utils::consumeReadText(readText_, contentNodes_, node.get());
             contentNodes_.emplace_back(std::move(node));
         }
@@ -67,13 +64,13 @@ void TagNode::load(StreamReader& stream)
 
 TagNode::ReadResult TagNode::readName(StreamReader& stream, const StreamReaderPosition& nodePos)
 {
-    if (std::isspace(stream.peek().front())){
+    if (std::isspace(stream.peek().front())) {
         name_ = readText_;
         if (utils::isBlank(name_))
             throw TemplateError{nodePos, "Tag's name can't be empty"};
         readText_.clear();
     }
-    else if (stream.peek() == ">"){
+    else if (stream.peek() == ">") {
         name_ = readText_;
         if (utils::isBlank(name_))
             throw TemplateError{nodePos, "Tag's name can't be empty"};
@@ -86,14 +83,14 @@ TagNode::ReadResult TagNode::readName(StreamReader& stream, const StreamReaderPo
             return ReadResult::ParsingCompleted;
     }
     else
-        readText_+= stream.read();
+        readText_ += stream.read();
 
     return ReadResult::Ok;
 }
 
 TagNode::ReadResult TagNode::readAttributes(StreamReader& stream)
-{    
-    if (stream.peek() == ">"){
+{
+    if (stream.peek() == ">") {
         attributesRead_ = true;
         utils::consumeReadAttributesText(readText_, attributeNodes_);
         stream.skip(1);
@@ -104,7 +101,7 @@ TagNode::ReadResult TagNode::readAttributes(StreamReader& stream)
     }
 
     auto node = readTagAttributeNode(stream);
-    if (node){
+    if (node) {
         utils::consumeReadAttributesText(readText_, attributeNodes_);
         attributeNodes_.emplace_back(std::move(node));
     }
@@ -114,28 +111,34 @@ TagNode::ReadResult TagNode::readAttributes(StreamReader& stream)
     return ReadResult::Ok;
 }
 
-std::string TagNode::renderingCode()
+std::vector<std::unique_ptr<IDocumentNode>> TagNode::flatten()
 {
-    auto result = std::string{};
-    if (!extension_.isEmpty()){
-        if (extension_.type() == NodeExtension::Type::Conditional)
-            result += "if (" + extension_.content() + "){ ";
-        else if (extension_.type() == NodeExtension::Type::Loop)
-            result += "for (" + extension_.content() + "){ ";
+    auto result = std::vector<std::unique_ptr<IDocumentNode>>{};
+    if (extension_.has_value())
+        result.emplace_back(
+                std::make_unique<ControlFlowStatementNode>(ControlFlowStatementNodeType::Open, extension_.value()));
+    result.emplace_back(std::make_unique<TextNode>("<" + name_));
+    for (auto& node : attributeNodes_){
+        if (auto nodeCollection = node->interface<INodeCollection>())
+            std::ranges::move(nodeCollection->flatten(), std::back_inserter(result));
+        else
+            result.emplace_back(std::move(node));
     }
-    result  += "out << \"<" + name_ + "\";";
-    for (auto& node : attributeNodes_)
-        result += node->renderingCode();
-    result += "out << \">\";";
-
-    for (auto& node : contentNodes_)
-        result += node->renderingCode();
+    result.emplace_back(std::make_unique<TextNode>(">"));
+    for (auto& node : contentNodes_){
+        if (auto nodeCollection = node->interface<INodeCollection>())
+            std::ranges::move(nodeCollection->flatten(), std::back_inserter(result));
+        else
+            result.emplace_back(std::move(node));
+    }
     if (!utils::isTagEmptyElement(name_))
-        result += "out << \"</" + name_ + ">\";";
-    if (!extension_.isEmpty())
-        result += " } ";
+        result.emplace_back(std::make_unique<TextNode>("</" + name_ + ">"));
+
+    if (extension_.has_value())
+        result.emplace_back(
+                std::make_unique<ControlFlowStatementNode>(ControlFlowStatementNodeType::Close, extension_.value()));
 
     return result;
 }
 
-}
+} // namespace htcpp
