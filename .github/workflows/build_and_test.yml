@@ -13,11 +13,8 @@ on:
 
 jobs:
   build:
-    name: ${{ matrix.config.name }} (nameof = ${{ matrix.use_nameof }})
+    name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
-    env:
-      CC: ${{ matrix.config.cc }}
-      CXX: ${{ matrix.config.cxx }}
 
     strategy:
       fail-fast: false
@@ -56,7 +53,7 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
 
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=ON -DENABLE_EXAMPLES=ON
+        run: cmake --preset=${{ matrix.config.cmake-preset }} -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=ON -DENABLE_EXAMPLES=ON
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build --config Release
@@ -73,8 +70,9 @@ jobs:
           find build/examples -type f -name "*.so" -exec cp {} examples-build \;
           find build/examples -type f -name "*.dll" -exec cp {} examples-build \;
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v3
+      - name: Upload examples build artifact
+        if: matrix.config.cmake-preset != 'gcc-release'
+        uses: actions/upload-artifact@v4
         with:
           name: hypertextcpp-examples-${{ matrix.config.os }}
           path: |
@@ -101,12 +99,12 @@ jobs:
             shell_command: "",
           }
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - if: matrix.config.name == 'Windows'
         uses: msys2/setup-msys2@v2
         with:
           path-type: inherit
-      - uses: robinraju/release-downloader@v1.7
+      - uses: robinraju/release-downloader@v1.11
         with:
           repository: "kamchatka-volcano/lunchtoast"
           latest: true
@@ -119,7 +117,7 @@ jobs:
         run: chmod +x lunchtoast
       - name: Download hypertextcpp examples build
         id: pre_launch_tests
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: hypertextcpp-examples-${{ matrix.config.os }}
           path: examples-build
@@ -140,7 +138,7 @@ jobs:
         run: lunchtoast/lunchtoast functional_tests ${{ matrix.config.shell_command }} -collectFailedTests=failed_tests -config="ci.cfg"
       - name: Upload failed tests
         if: failure() && steps.launch_tests.outcome != 'success' && steps.pre_launch_tests.outcome == 'success'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: hypertextcpp-failed-tests-${{ matrix.config.os }}
           path: failed_tests

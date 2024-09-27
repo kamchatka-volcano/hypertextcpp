@@ -1,4 +1,6 @@
 #include "node_utils.h"
+#include <algorithm>
+#include <iterator>
 
 namespace htcpp{
 
