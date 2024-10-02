@@ -1,8 +1,8 @@
 #include "errors.h"
 #include "nameutils.h"
-#include "transpiler.h"
 #include "shared_lib_transpiler_renderer.h"
 #include "single_header_transpiler_renderer.h"
+#include "transpiler.h"
 #include <cmdlime/commandlinereader.h>
 #include <cmdlime/config.h>
 #include <filesystem>
@@ -13,44 +13,45 @@
 namespace fs = std::filesystem;
 
 namespace {
-struct Cfg : public cmdlime::Config{
-    CMDLIME_ARG(input, fs::path)                                 << ".htcpp file to transpile";
-    CMDLIME_PARAM(output, fs::path)()                            << "output c++ file path\n(if empty, current working directory is used)";
-    CMDLIME_PARAM(className, std::string)()                      << "generated class name";
-    CMDLIME_FLAG(sharedLib)                                      << "generate result as shared library source files";
-    CMDLIME_FLAG(classPascalcase) << cmdlime::WithoutShortName{} << "generate class name by using .htcpp filename in PascalCase";
-    CMDLIME_FLAG(classSnakecase)  << cmdlime::WithoutShortName{} << "generate class name by using .htcpp filename in snake_case";
-    CMDLIME_FLAG(classLowercase)  << cmdlime::WithoutShortName{} << "generate class name by using .htcpp filename in lowercase";
+struct Cfg : public cmdlime::Config {
+    CMDLIME_ARG(input, fs::path) << ".htcpp file to transpile";
+    CMDLIME_PARAM(output, fs::path)() << "output c++ file path\n(if empty, current working directory is used)";
+    CMDLIME_PARAM(className, std::string)() << "generated class name";
+    CMDLIME_FLAG(sharedLib) << "generate result as shared library source files";
+    CMDLIME_FLAG(classPascalcase) << cmdlime::WithoutShortName{}
+                                  << "generate class name by using .htcpp filename in PascalCase";
+    CMDLIME_FLAG(classSnakecase) << cmdlime::WithoutShortName{}
+                                 << "generate class name by using .htcpp filename in snake_case";
+    CMDLIME_FLAG(classLowercase) << cmdlime::WithoutShortName{}
+                                 << "generate class name by using .htcpp filename in lowercase";
 };
 fs::path getOutputFilePath(const Cfg& cfg);
 std::string getClassName(const Cfg& cfg);
 std::unique_ptr<htcpp::ITranspilerRenderer> makeTranspilerRenderer(const Cfg& cfg);
-}
+} //namespace
 
 int run(const Cfg& cfg)
 {
     auto result = std::string{};
     auto transpilerRenderer = makeTranspilerRenderer(cfg);
     auto transpiler = htcpp::Transpiler{*transpilerRenderer};
-    try{
-      result = transpiler.process(cfg.input);
-      auto stream = std::ofstream{getOutputFilePath(cfg)};
-      stream << result;
+    try {
+        result = transpiler.process(cfg.input);
+        auto stream = std::ofstream{getOutputFilePath(cfg)};
+        stream << result;
     }
-    catch(const htcpp::Error& e)
-    {
-      std::cerr << e.what() << std::endl;
-      return 1;
+    catch (const htcpp::Error& e) {
+        std::cerr << e.what() << std::endl;
+        return 1;
     }
-    catch(const std::exception& e)
-    {
-      std::cerr << "Unknown critical error:" << e.what() << std::endl;
-      return 1;
+    catch (const std::exception& e) {
+        std::cerr << "Unknown critical error:" << e.what() << std::endl;
+        return 1;
     }
     return 0;
 }
 
-int main(int argc, char**argv)
+int main(int argc, char** argv)
 {
     return cmdlime::CommandLineReader{"hypertextcpp"}.exec<Cfg>(argc, argv, run);
 }
@@ -59,13 +60,13 @@ namespace {
 fs::path getOutputFilePath(const Cfg& cfg)
 {
     auto path = fs::current_path();
-    if (!cfg.output.empty()){
+    if (!cfg.output.empty()) {
         if (cfg.output.is_absolute())
             path = cfg.output;
         else
             path /= cfg.output;
     }
-    else{
+    else {
         if (cfg.sharedLib)
             path /= (cfg.input.stem().string() + ".cpp");
         else
@@ -77,7 +78,7 @@ fs::path getOutputFilePath(const Cfg& cfg)
 std::string getClassName(const Cfg& cfg)
 {
     auto result = cfg.className;
-    if (result.empty()){
+    if (result.empty()) {
         result = cfg.input.stem().string();
         if (cfg.classPascalcase)
             result = htcpp::utils::toPascalCase(result);
@@ -97,4 +98,4 @@ std::unique_ptr<htcpp::ITranspilerRenderer> makeTranspilerRenderer(const Cfg& cf
         return std::make_unique<htcpp::SingleHeaderTranspilerRenderer>(getClassName(cfg));
 }
 
-}
+} //namespace

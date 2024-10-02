@@ -1,12 +1,9 @@
 cmake_minimum_required(VERSION 3.18)
 project(ex_04)
 
-add_custom_command(
-    OUTPUT  todolist.h
-    COMMAND hypertextcpp ${CMAKE_CURRENT_SOURCE_DIR}/todolist.htcpp -o ${CMAKE_CURRENT_SOURCE_DIR}/todolist.h --class-name TodoList
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/todolist.htcpp
-    VERBATIM
-)
+include(../../hypertextcpp.cmake)
+
+hypertextcpp_GenerateHeader(NAME todolist CLASS_NAME TodoList)
 
 set(SRC
     todolist_printer.cpp

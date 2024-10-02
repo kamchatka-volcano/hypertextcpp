@@ -3,7 +3,6 @@
 #include "errors.h"
 #include "utils.h"
 #include <utility>
-#include <gsl/gsl>
 
 namespace htcpp{
 

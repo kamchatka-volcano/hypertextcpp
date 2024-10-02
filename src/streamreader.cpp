@@ -1,5 +1,4 @@
 #include "streamreader.h"
-#include <tuple>
 
 namespace htcpp{
 

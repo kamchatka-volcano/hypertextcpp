@@ -6,7 +6,7 @@
 #include "streamreader.h"
 #include "textnode.h"
 #include "utils.h"
-#include <gsl/gsl>
+#include <algorithm>
 
 namespace htcpp{
 

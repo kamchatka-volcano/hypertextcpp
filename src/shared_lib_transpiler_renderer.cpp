@@ -24,7 +24,9 @@ std::string SharedLibTranspilerRenderer::generateCode(const std::vector<gsl::not
       #define HYPERTEXTCPP_API
     #endif
 
+    namespace{
     struct Template;
+    }
     namespace htcpp{
     class AllowRenderTag{
         friend struct ::Template;
@@ -46,6 +48,7 @@ std::string SharedLibTranspilerRenderer::generateCode(const std::vector<gsl::not
     }
 
     #define HTCPP_CONFIG(TCfg) using Cfg = TCfg;\
+    namespace {\
     struct TemplateRenderer{\
     void renderHTML(const Cfg& cfg, std::ostream& out, htcpp::AllowRenderTag) const;\
     void renderHTMLPart(const std::string& name, const Cfg& cfg, std::ostream& out, htcpp::AllowRenderTag) const;\
@@ -84,6 +87,7 @@ std::string SharedLibTranspilerRenderer::generateCode(const std::vector<gsl::not
             renderer_.renderHTMLPart(renderFuncName, cfg, stream, htcpp::AllowRenderTag{});\
         }\
     };\
+    }\
     \
     extern "C" \
     HYPERTEXTCPP_API htcpp::ITemplate<TCfg>* makeTemplate()\
@@ -109,7 +113,7 @@ std::string SharedLibTranspilerRenderer::generateCode(const std::vector<gsl::not
     result += "\n}\n";
 
 
-    result +=
+    result +="namespace {\n"
             "void TemplateRenderer::renderHTML(const Cfg& cfg, std::ostream& out, htcpp::AllowRenderTag tag) const\n"
             "{\n";
     for (const auto& procedure : procedures)
@@ -129,6 +133,7 @@ std::string SharedLibTranspilerRenderer::generateCode(const std::vector<gsl::not
         result += "    htcpp::" + procedure->name() + "(cfg, out, tag);";
     }
     result += "\n}\n";
+    result += "}";
 
     return result;
 }

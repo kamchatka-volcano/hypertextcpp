@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="doc/logo.png"/>  
+  <img height="96" src="doc/logo.png"/>  
 </p>
 
-**hypertextcpp** - is a hyperfast HTML templating system for C++ applications.  
-It provides a highly readable `.htcpp` template file format and a command line utility that transpiles it to C++ HTML rendering code. Include a generated C++ header file in your project, then setup a build system to update it when necessary, and you're all set.
+**hypertextcpp** is an HTML templating system for C++ applications.
+It provides an [.htcpp](https://marketplace.visualstudio.com/items?itemName=kamchatka-volcano.htcpp) template file format  and a command-line utility that transpiles it to C++ HTML rendering code. Include the generated C++ header file in your project, set up a build system to update it when necessary, and you're all set.
 
 A quick example:
 
@@ -50,7 +50,7 @@ int main()
 
 ```
 
-Compile it with your preferred method, launch it, and you will get this output:
+  Compile it with your preferred method, launch it, and you will get this output:
 ```console
 kamchatka-volcano@home:~$ ./todolist_printer
 <html>	
@@ -85,26 +85,25 @@ kamchatka-volcano@home:~$ ./todolist_printer
 ## Template file syntax
 
 ### Expressions
-**$(**`c++ expression`**)**  
-Expressions are used to add application's data to the template. It can be any valid C++ expression, with only condition, that its result must be streamable to the default output stream `std::ostream`. Expressions can be placed anywhere in the HTML template, besides the tag names.
-In our todolist example, `$(cfg.name)` is an expression adding template config variable `name` to the result page.
+**$(**`c++ expression`**)**
+Expressions are used to add the application's data to the template. It can be any valid C++ expression, with the only condition that its result must be streamable to the default output stream `std::ostream`. Expressions can be placed anywhere in the HTML template, except in tag names.
+In our todolist example, `$(cfg.name)` is an expression that adds the template config variable `name` to the result page.
 
 ### Statements
-**${**`c++ statement(s)`**}**  
-Statements are used to add any valid C++ code to the template rendering function. For example, you can add variables, classes declarations or lambdas.  Let's say that you don't like the default name `cfg` used for passing data to the template. You can create a reference to it with any name you like and use it later:
+**${**`c++ statement(s)`**}**
+Statements are used to add any valid C++ code to the template rendering function. For example, you can add variables, class declarations, or lambdas. Let's say you don't like the default name `cfg` used for passing data to the template. You can create a reference to it with any name you like and use it later:
 
 ```html
     ${ auto& param = cfg;}
     <h1>$(param.name)'s todo list:</h1>
 ```
 
-Note, that `cfg` and `out` are reserved names used for parameters in generated
+Note, that `cfg` and `out` are reserved names used for parameters in the generated
 rendering function. Also, don't put anything in the `htcpp` namespace.
 
 ### Global statements
 **#{**`c++ statement(s)`**}**  
-These statements are used to add any valid C++ code outside the template rendering function. Unlike regular statements, with global ones you can add include directives or functions definitions. Global statements can only be placed in the top level of `htcpp` template, outside any HTML element. Please, don't put anything in the `htcpp` namespace.
-
+These statements are used to add any valid C++ code outside the template rendering function. Unlike regular statements, with global ones you can add include directives or function definitions. Global statements can only be placed at the top level of the `htcpp` template, outside any HTML element. Please don't put anything in the `htcpp` namespace.
 
 ### Control flow extensions
 If **hypertextcpp** used a common approach for control flow in HTML template engines, our todolist example would look something like this:
@@ -125,9 +124,9 @@ If **hypertextcpp** used a common approach for control flow in HTML template eng
 
 ```
 
-In our opinion it significantly hurts readability of document tree  and makes it hard to choose indentation and keep it consistent - notice how  different approaches are used for `if` and `for` blocks in the example.
+In our opinion, it significantly hurts the readability of the document tree and makes it hard to choose indentation and keep it consistent — notice how different approaches are used for if and for blocks in the example.
 
-**hypertextcpp** solves this problem (*and is created mainly for solving this problem*) by  applying control flow to the HTML elements itself without  adding logic block scopes to the document. It uses just two extensions for tags to make this work:
+**hypertextcpp** solves this problem by applying control flow to the HTML elements themselves without adding logic block scopes to the document. It uses just two extensions for tags to make this work:
 
 * Conditional extension  
   **?(**`c++ condition`**)**  
@@ -141,12 +140,12 @@ In our opinion it significantly hurts readability of document tree  and makes it
   **@(**`c++ init-statement; condition; iteration_expression`**)**  
   or  
   **@(**`c++ range_declaration : range_expression`**)**  
-  HTML elements with this extension are added to the document multiple times, on each step of the loop, or for each element of the iterated range.
+  HTML elements with this extension are added to the document multiple times, on each step of the loop or for each element of the iterated range.
   Example of usage from our todolist template:
   ```html
       <li>$(task.name)</li>@(auto task : cfg.tasks)
   ```
-  Lets add another example for other type of `for` loop:
+  Let's add another example for another type of `for` loop:
   ```html
       <li>Task#$(i)</li>@(auto i = 0 ; i < 3; ++i)
   ```
@@ -159,7 +158,7 @@ In our opinion it significantly hurts readability of document tree  and makes it
 
 Both extensions can be added to the opening or closing tag, but each tag and HTML element can only have one extension.
 
-It's recommended to add extension to the opening tag for the multiline HTML elements:
+It's recommended to add the extension to the opening tag for multiline HTML elements:
 ```html
 <div>?(cfg.greet)
     <p>Hello world!</p>
@@ -170,7 +169,7 @@ and to the closing tag for the single-line ones:
 <div><p>Hello world!</p></div>?(cfg.greet)
 ```
 
-Note, that while extensions hide control flow block scopes from the template document, they're still present in the generated C++ code and implemented with regular `if` and `for` control structures. Therefore, template like this:
+Note that while extensions hide control flow block scopes from the template document, they're still present in the generated C++ code and implemented with regular `if` and `for` control structures. Therefore, a template like this:
 
 ```html
     <div>@(auto i = 0; i<3; ++i)
@@ -179,13 +178,13 @@ Note, that while extensions hide control flow block scopes from the template doc
     </div>
     <p> Last num is $(num) </p>
 ```
-won't compile because the `num` variable isn't visible outside the `for` block scope generated by loop extension on the `div` tag.
+won't compile because the `num` variable isn't visible outside the `for` block scope generated by the loop extension on the `div` tag.
 
 ### Sections
 **\[\[** `text, html elements, statements, expressions or other sections` **]]**  
-Sections can contain a part of template document, and it's possible to attach control flow extensions to them. Their main usage is adding attributes to HTML elements conditionally.
+Sections can contain a part of the template document, and it's possible to attach control flow extensions to them. Their main usage is adding attributes to HTML elements conditionally.
 
-Let's update todolist example by adding a line-through text style to completed tasks:  
+Let's update the todolist example by adding a line-through text style to completed tasks:
 [`examples/02/todolist.htcpp`](examples/02/todolist.htcpp)
 ```html
 <html>	
@@ -220,9 +219,10 @@ Tip of the day: Keep your template tidy and don't introduce sections when it's p
 ### Procedures and partial rendering
 **#**`procedureName`**(){**`html elements, statements, expressions or sections`**}**
 
-Parts of `htccp` template can be placed inside procedures - parameterless functions capturing the `cfg` variable. They are available for call from the C++ application, so if any part of the page needs to be rendered separately from the whole template, procedures are a big help.
-Procedures can only be placed in the top level of `htcpp` template, outside any HTML element.
-Let's put the list of tasks from the todolist example in the procedure:  
+Parts of the `htcpp` template can be placed inside procedures—parameterless functions capturing the `cfg` variable. They are available for call from the C++ application, so if any part of the page needs to be rendered separately from the whole template, procedures are a big help.
+Procedures can only be placed at the top level of the `htcpp` template, outside any HTML element.
+Let's put the list of tasks from the todolist example in the procedure:
+
 [`examples/03/todolist.htcpp`](examples/03/todolist.htcpp)
 ```html
 #taskList(){
@@ -239,7 +239,7 @@ Let's put the list of tasks from the todolist example in the procedure:
 </html>
 ```
 
-Now the tasks list can be output to stdout by itself like that:  
+Now the tasks list can be output to stdout by itself like this:  
 [`examples/03/todolist_printer.cpp`](examples/03/todolist_printer.cpp)
 ```cpp
     //...
@@ -278,18 +278,17 @@ Process finished with exit code 0
  ```
 
 ### Single header renderer
-By default, the **hypertextcpp** transpiler works in a single header mode and generates a C++ header file that you're supposed to simply include in your project. A generated renderer class has a name of `.htcpp` template file. You can override the name by using `--class-name` parameter, or you can specify one of the following flags `--class-pascalcase`, `--class-snakecase` or `--class-lowercase` to use `.htcpp` template's filename converted to the corresponding case as a class name.
-Converting template to C++ code each time you modify it is a laborious task, so it makes sense to add this step to your build process. Let's demonstrate on how to do it with CMake and at the same time rename the renderer class.
+By default, the **hypertextcpp** transpiler works in a single header mode and generates a C++ header file that you're supposed to simply include in your project. A generated renderer class has the name of the `.htcpp` template file. You can override the name by using the `--class-name` parameter, or you can specify one of the following flags: `--class-pascalcase`, `--class-snakecase`, or `--class-lowercase` to use the `.htcpp` template's filename converted to the corresponding case as a class name.
+Converting the template to C++ code each time you modify it is a laborious task, so it makes sense to add this step to your build process. To do this with CMake you can use `hypertextcpp_GenerateHeader` function from the `hypertextcpp.cmake` file.
+Note that this function launches the `hypertextcpp` executable, so it should be installed on your system first. 
 
 [`examples/04/CMakeLists.txt`](examples/04/CMakeLists.txt)
 ```
 cmake_minimum_required(VERSION 3.18)
 
-add_custom_command(
-    OUTPUT  todolist.h
-    COMMAND hypertextcpp ${CMAKE_CURRENT_SOURCE_DIR}/todolist.htcpp -o ${CMAKE_CURRENT_SOURCE_DIR}/todolist.h --class-name TodoList
-   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/todolist.htcpp
-)
+
+include(../../hypertextcpp.cmake)
+hypertextcpp_GenerateHeader(NAME todolist CLASS_NAME TodoList)
 
 set(SRC
     todolist_printer.cpp
@@ -301,11 +300,11 @@ target_compile_features(todolist_printer PUBLIC cxx_std_17)
 set_target_properties(todolist_printer PROPERTIES CXX_EXTENSIONS OFF)
 ```
 
-Now, everytime you change the template, the corresponding header will be regenerated on the next build.
+Now, every time you change the template, the corresponding header will be regenerated on the next build.
 
 ### Shared library renderer
-It can feel quite wasteful to rebuild your project each time the template file is changed, so **hypertextcpp** supports generation of C++ source file for building templates in form of shared libraries and linking them dynamically from your application.
-It requires to duplicate the config declaration in `.htccp` template, registering it with `HTCPP_CONFIG` macro both in template and in the application source, generate the renderer code with  `--shared-lib` command line flag, build the library and load it using the tiny API installed from the `shared_lib_api/` directory. It sounds scarier than it is, so let's quickly update the todolist example to see how it works.
+It can feel quite wasteful to rebuild your project each time the template file is changed, so **hypertextcpp** supports the generation of a C++ source file for building templates in the form of shared libraries and linking them dynamically from your application.
+It requires duplicating the config declaration in the .htcpp template, registering it with the `HTCPP_CONFIG` macro in both the template and the application source, generating the renderer code with the `--shared-lib` command line flag, building the library, and loading it using the tiny API installed from the `shared_lib_api/` directory. It sounds scarier than it is, so let's quickly update the todolist example to see how it works.
 
 First we need to copy the config structure declaration in the template:  
 [`examples/05/todolist.htcpp`](examples/05/todolist.htcpp)
@@ -337,35 +336,22 @@ First we need to copy the config structure declaration in the template:
 </html>
 ```
 
-Be sure to use an exact copy, any mismatch of the config structure between template and application can't be handled gracefully, so if you try to load a template library with different structure you'll definitely crash the application and maybe hurt someone as a result.
+Be sure to use an exact copy; any mismatch of the config structure between the template and the application can't be handled gracefully. So, if you try to load a template library with a different structure, you'll definitely crash the application and maybe hurt someone as a result.
 
-Next, we need to build our template renderer as a library. It's not possible to bundle multiple templates file in one library, so we can easily use a generic CMake file, that builds a library from a single `.htcpp` file:  
-[`shared_template/CMakeLists.txt`](shared_template/CMakeLists.txt)
+Next, we need to build our template renderer as a library. It's not possible to bundle multiple template files in one library, so we can build a library from a single `.htcpp` file by using the `hypertextcpp_BuildSharedLibrary` CMake function from `hypertextcpp.cmake`:
+
 ```
 cmake_minimum_required(VERSION 3.18)
 
-option(NAME "Template name")
-
-project(${NAME})
-
-add_custom_command(
-    OUTPUT  ${NAME}.cpp
-    COMMAND hypertextcpp ${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.htcpp -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cpp -s
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.htcpp
+hypertextcpp_BuildSharedLibrary(
+        NAME todolist
+        OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
 )
-
-add_library(${NAME} SHARED ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cpp)
-target_compile_features(${NAME} PUBLIC cxx_std_17)
-set_target_properties(${NAME} PROPERTIES CXX_EXTENSIONS OFF)
+add_dependencies(${PROJECT_NAME} todolist)
 ```
 
-Copy `todolist.htcpp` in  `shared_template/` and execute the following commands:
-```console
-kamchatka-volcano@home:~/shared_template$ cmake -S . -B build -DNAME=todolist 
-kamchatka-volcano@home:~/shared_template/build$ cmake --build build
-```
-If everything goes right, you'll get the `libtodolist.so` in the build directory. That's our `todolist.htcpp` template compiled as the shared library.  
-Next, let's modify the `todolist_printer.cpp` to be able to load it:  
+If everything goes right, you'll get `libtodolist.so` in the build directory. That's our `todolist.htcpp` template compiled as a shared library.
+Next, let's modify `todolist_printer.cpp` to be able to load it:
 [`examples/05/todolist_printer.cpp`](examples/05/todolist_printer.cpp)
 ```cpp
 #include <hypertextcpp/templateloader.h>
@@ -391,8 +377,8 @@ return 0;
 }
 ```
 
-Don't forget to add linking of system  library `dl` to the build config - that allows us to link the template library dynamically.  
-`todolist_printer` should compile and work the same as the previous example using the single header approach.
+On Linux, it may be necessary to link the system library `dl` to the build config, as we load the template library dynamically.
+`todolist_printer` should compile and work the same as the previous example using the single-header approach.
 
 ## Installation
 

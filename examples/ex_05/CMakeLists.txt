@@ -12,8 +12,8 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF)
 
 target_link_libraries(${PROJECT_NAME} ${CMAKE_DL_LIBS})
 
-include(../../build_shared_template.cmake)
-hypertextcpp_BuildSharedTemplate(
+include(../../hypertextcpp.cmake)
+hypertextcpp_BuildSharedLibrary(
         NAME todolist
         OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
 )
