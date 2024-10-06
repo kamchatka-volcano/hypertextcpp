@@ -9,7 +9,7 @@ TextNode::TextNode(std::string value)
 
 std::string TextNode::renderingCode() const
 {
-    return "out << R\"(" + content_ + ")\";";
+    return "out << R\"_htcpp_str_(" + content_ + ")_htcpp_str_\";";
 }
 
 std::string TextNode::content() const

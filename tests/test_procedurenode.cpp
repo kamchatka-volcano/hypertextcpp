@@ -36,7 +36,7 @@ TEST(ProcedureNode, Basic)
 {
     test("#hello_world(){ <p>Hello World! </p> }",
          "hello_world",
-         "out << R\"( <p>Hello World! </p> )\";");
+         "out << R\"_htcpp_str_( <p>Hello World! </p> )_htcpp_str_\";");
 }
 
 

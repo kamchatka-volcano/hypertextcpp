@@ -42,22 +42,22 @@ TEST(ExpressionNode, Basic)
 TEST(ExpressionNode, WithStringOutput)
 {
     test<htcpp::ExpressionNode>
-            ("$( isVisible ? \"Hello:)\" : defaultValue())",
-             "out << ( isVisible ? \"Hello:)\" : defaultValue());");
+            ("$( isVisible ? \"Hello:)_htcpp_str_\" : defaultValue())",
+             "out << ( isVisible ? \"Hello:)_htcpp_str_\" : defaultValue());");
 }
 
 TEST(ExpressionNode, WithRawStringOutput)
 {
     test<htcpp::ExpressionNode>
-            ("$( isVisible ? R\"(Hello:))\" : defaultValue())",
-             "out << ( isVisible ? R\"(Hello:))\" : defaultValue());");
+            ("$( isVisible ? R\"_htcpp_str_(Hello:))_htcpp_str_\" : defaultValue())",
+             "out << ( isVisible ? R\"_htcpp_str_(Hello:))_htcpp_str_\" : defaultValue());");
 }
 
 TEST(ExpressionNode, WithCustomRawStringOutput)
 {
     test<htcpp::ExpressionNode>
             ("$( isVisible ? `Hello:)` : defaultValue())",
-             "out << ( isVisible ? R\"(Hello:))\" : defaultValue());");
+             "out << ( isVisible ? R\"_htcpp_str_(Hello:))_htcpp_str_\" : defaultValue());");
 }
 
 TEST(ExpressionNode, WithCharOutput)
@@ -115,7 +115,7 @@ TEST(StatementNode, BasicWithString)
 {
     test<htcpp::StatementNode>
             ("${ auto a = 0; {auto str = `Hello world's{}`;} }",
-             " auto a = 0; {auto str = R\"(Hello world's{})\";} ");
+             " auto a = 0; {auto str = R\"_htcpp_str_(Hello world's{})_htcpp_str_\";} ");
 }
 
 TEST(GlobalStatementNode, Basic)
@@ -129,7 +129,7 @@ TEST(GlobalStatementNode, BasicWithString)
 {
     test<htcpp::GlobalStatementNode>
             ("#{ auto a = 0; {auto str = `Hello {}`;} }",
-             " auto a = 0; {auto str = R\"(Hello {})\";} ");
+             " auto a = 0; {auto str = R\"_htcpp_str_(Hello {})_htcpp_str_\";} ");
 }
 
 TEST(InvalidExpressionNode, Unclosed)
