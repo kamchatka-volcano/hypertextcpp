@@ -38,52 +38,52 @@ void testError(const std::string& input, const std::string& expectedErrorMsg)
 TEST(SectionNode, Basic)
 {
     test("[[ Hello world! ]]",
-         "out << R\"( Hello world! )\";");
+         "out << R\"_htcpp_str_( Hello world! )_htcpp_str_\";");
 }
 
 TEST(SectionNode, BasicWithConditionalExtension)
 {
     test("[[?(isVisible) Hello world! ]]",
-         "if (isVisible){ out << R\"( Hello world! )\"; } ");
+         "if (isVisible){ out << R\"_htcpp_str_( Hello world! )_htcpp_str_\"; } ");
 }
 
 TEST(SectionNode, BasicWithLoopExtension)
 {
     test("[[@(auto i = 0; i < 5; ++i) Hello world! ]]",
-         "for (auto i = 0; i < 5; ++i){ out << R\"( Hello world! )\"; } ");
+         "for (auto i = 0; i < 5; ++i){ out << R\"_htcpp_str_( Hello world! )_htcpp_str_\"; } ");
 }
 
 TEST(SectionNode, BasicWithConditionalExtensionOnClosingBraces)
 {
     test("[[ Hello world! ]]?(isVisible)",
-         "if (isVisible){ out << R\"( Hello world! )\"; } ");
+         "if (isVisible){ out << R\"_htcpp_str_( Hello world! )_htcpp_str_\"; } ");
 }
 
 TEST(SectionNode, BasicWithLoopExtensionOnClosingBraces)
 {
     test("[[ Hello world! ]]@(auto i = 0; i < 5; ++i)",
-         "for (auto i = 0; i < 5; ++i){ out << R\"( Hello world! )\"; } ");
+         "for (auto i = 0; i < 5; ++i){ out << R\"_htcpp_str_( Hello world! )_htcpp_str_\"; } ");
 }
 
 
 TEST(SectionNode, Nested)
 {
     test("[[ Hello <p>world</p> [[!]] ]]",
-         "out << R\"( Hello <p>world</p> ! )\";");
+         "out << R\"_htcpp_str_( Hello <p>world</p> ! )_htcpp_str_\";");
 }
 
 TEST(SectionNode, NestedWithConditionalExtension)
 {
     test("[[ Hello <p>?(isVisible)world</p> [[!]]?(isVisible) ]]?(isVisible)",
-         "if (isVisible){ out << R\"( Hello )\";if (isVisible){ out << R\"(<p>world</p>)\"; } out << R\"( )\";if "
-         "(isVisible){ out << R\"(!)\"; } out << R\"( )\"; } ");
+         "if (isVisible){ out << R\"_htcpp_str_( Hello )_htcpp_str_\";if (isVisible){ out << R\"_htcpp_str_(<p>world</p>)_htcpp_str_\"; } out << R\"_htcpp_str_( )_htcpp_str_\";if "
+         "(isVisible){ out << R\"_htcpp_str_(!)_htcpp_str_\"; } out << R\"_htcpp_str_( )_htcpp_str_\"; } ");
 }
 
 TEST(SectionNode, NestedWithLoopExtension)
 {
     test("[[ Hello <p>@(auto i = 0; i < 5; ++i)world</p> [[!]]@(auto i = 0; i < 3; ++i) ]]@(auto i = 0; i < 5; ++i)",
-         "for (auto i = 0; i < 5; ++i){ out << R\"( Hello )\";for (auto i = 0; i < 5; ++i){ out << "
-         "R\"(<p>world</p>)\"; } out << R\"( )\";for (auto i = 0; i < 3; ++i){ out << R\"(!)\"; } out << R\"( )\"; } ");
+         "for (auto i = 0; i < 5; ++i){ out << R\"_htcpp_str_( Hello )_htcpp_str_\";for (auto i = 0; i < 5; ++i){ out << "
+         "R\"_htcpp_str_(<p>world</p>)_htcpp_str_\"; } out << R\"_htcpp_str_( )_htcpp_str_\";for (auto i = 0; i < 3; ++i){ out << R\"_htcpp_str_(!)_htcpp_str_\"; } out << R\"_htcpp_str_( )_htcpp_str_\"; } ");
 }
 
 

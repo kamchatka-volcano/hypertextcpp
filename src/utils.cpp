@@ -69,10 +69,10 @@ std::string transformRawStrings(const std::string& cppCode, const StreamReaderPo
          if (res == "`"){
              if (!insideString) {
                  rawStringPos = stream.position();
-                 result += "R\"(";
+                 result += "R\"_htcpp_str_(";
              }
              else
-                 result += ")\"";
+                 result += ")_htcpp_str_\"";
              insideString = !insideString;
          }
          else

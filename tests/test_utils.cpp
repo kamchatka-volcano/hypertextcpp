@@ -8,12 +8,12 @@ TEST(Utils, TransformRawString)
     {
     auto code = "auto x = `Hello World`;";
     EXPECT_EQ(htcpp::utils::transformRawStrings(code, {1, 1}),
-              "auto x = R\"(Hello World)\";");
+              "auto x = R\"_htcpp_str_(Hello World)_htcpp_str_\";");
     }
     {
     auto code = "auto x = ``;";
     EXPECT_EQ(htcpp::utils::transformRawStrings(code, {1, 1}),
-          "auto x = R\"()\";");
+          "auto x = R\"_htcpp_str_()_htcpp_str_\";");
     }
 }
 
