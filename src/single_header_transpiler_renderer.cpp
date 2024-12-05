@@ -71,9 +71,9 @@ std::string SingleHeaderTranspilerRenderer::generateCode(
 
     for (const auto& procedure : procedures){
         result += "if (name == \"" + procedure->name() + "\")\n";
-        result += "htcpp::" + procedure->name() + "(cfg, out, tag);";
+        result += "    htcpp::" + procedure->name() + "(cfg, out, tag);\n";
     }
-    result += "    }\n";
+    result += "}\n";
     result += "};\n";
 
 
