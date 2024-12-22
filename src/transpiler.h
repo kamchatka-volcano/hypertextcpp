@@ -1,9 +1,11 @@
 #pragma once
+#include "generated_file_type.h"
 #include <sfun/member.h>
 #include <filesystem>
 #include <string>
 #include <vector>
 #include <memory>
+#include <unordered_map>
 
 namespace htcpp{
 namespace fs = std::filesystem;
@@ -16,7 +18,7 @@ class StreamReader;
 class Transpiler final{
 public:
     explicit Transpiler(ITranspilerRenderer&);
-    std::string process(const fs::path& filePath);
+    std::unordered_map<GeneratedFileType, std::string> process(const fs::path& filePath);
 
 private:
     bool readNode(StreamReader& stream);

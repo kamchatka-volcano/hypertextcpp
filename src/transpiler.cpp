@@ -73,7 +73,7 @@ std::vector<gsl::not_null<IDocumentNodeRenderer*>> nodesToNodeRenderers(
 
 } //namespace
 
-std::string Transpiler::process(const fs::path& filePath)
+std::unordered_map<GeneratedFileType, std::string> Transpiler::process(const fs::path& filePath)
 {
     reset();
     parseTemplateFile(filePath);

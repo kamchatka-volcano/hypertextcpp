@@ -25,20 +25,21 @@ struct Cfg : public cmdlime::Config {
     CMDLIME_FLAG(classLowercase) << cmdlime::WithoutShortName{}
                                  << "generate class name by using .htcpp filename in lowercase";
 };
-fs::path getOutputFilePath(const Cfg& cfg);
+fs::path getOutputFilePath(const Cfg& cfg, htcpp::GeneratedFileType fileType);
 std::string getClassName(const Cfg& cfg);
 std::unique_ptr<htcpp::ITranspilerRenderer> makeTranspilerRenderer(const Cfg& cfg);
 } //namespace
 
 int run(const Cfg& cfg)
 {
-    auto result = std::string{};
     auto transpilerRenderer = makeTranspilerRenderer(cfg);
     auto transpiler = htcpp::Transpiler{*transpilerRenderer};
     try {
-        result = transpiler.process(cfg.input);
-        auto stream = std::ofstream{getOutputFilePath(cfg)};
-        stream << result;
+        const auto result = transpiler.process(cfg.input);
+        for (const auto& [fileType, code] : result) {
+            auto stream = std::ofstream{getOutputFilePath(cfg, fileType)};
+            stream << code;
+        }
     }
     catch (const htcpp::Error& e) {
         std::cerr << e.what() << std::endl;
@@ -57,7 +58,7 @@ int main(int argc, char** argv)
 }
 
 namespace {
-fs::path getOutputFilePath(const Cfg& cfg)
+fs::path getOutputFilePath(const Cfg& cfg, htcpp::GeneratedFileType fileType)
 {
     auto path = fs::current_path();
     if (!cfg.output.empty()) {
@@ -67,9 +68,9 @@ fs::path getOutputFilePath(const Cfg& cfg)
             path /= cfg.output;
     }
     else {
-        if (cfg.sharedLib)
+        if (fileType == htcpp::GeneratedFileType::Source)
             path /= (cfg.input.stem().string() + ".cpp");
-        else
+        else if (fileType == htcpp::GeneratedFileType::Header)
             path /= (cfg.input.stem().string() + ".h");
     }
     return path;

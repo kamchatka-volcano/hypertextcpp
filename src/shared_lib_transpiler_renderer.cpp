@@ -1,13 +1,13 @@
+#include "shared_lib_transpiler_renderer.h"
 #include "codenode.h"
 #include "idocumentnoderenderer.h"
 #include "procedurenode.h"
-#include "shared_lib_transpiler_renderer.h"
 
-namespace htcpp{
-
-std::string SharedLibTranspilerRenderer::generateCode(const std::vector<gsl::not_null<IDocumentNodeRenderer*>>& globalStatements,
-                                                      const std::vector<std::unique_ptr<ProcedureNode>>& procedures,
-                                                      const std::vector<gsl::not_null<IDocumentNodeRenderer*>>& nodes) const
+namespace htcpp {
+std::unordered_map<GeneratedFileType, std::string> SharedLibTranspilerRenderer::generateCode(
+        const std::vector<gsl::not_null<IDocumentNodeRenderer*>>& globalStatements,
+        const std::vector<std::unique_ptr<ProcedureNode>>& procedures,
+        const std::vector<gsl::not_null<IDocumentNodeRenderer*>>& nodes) const
 {
     auto result = std::string{R"(
     #include <string>
@@ -24,16 +24,7 @@ std::string SharedLibTranspilerRenderer::generateCode(const std::vector<gsl::not
       #define HYPERTEXTCPP_API
     #endif
 
-    namespace{
-    struct Template;
-    }
     namespace htcpp{
-    class AllowRenderTag{
-        friend struct ::Template;
-    private:
-        AllowRenderTag(){};
-    };
-
     template <typename TCfg>
     class ITemplate{
     public:
@@ -46,45 +37,60 @@ std::string SharedLibTranspilerRenderer::generateCode(const std::vector<gsl::not
         virtual void print(const std::string& renderFuncName, const TCfg& cfg, std::ostream& stream) const = 0;
     };
     }
-
     #define HTCPP_CONFIG(TCfg) using Cfg = TCfg;\
     namespace {\
-    struct TemplateRenderer{\
-    void renderHTML(const Cfg& cfg, std::ostream& out, htcpp::AllowRenderTag) const;\
-    void renderHTMLPart(const std::string& name, const Cfg& cfg, std::ostream& out, htcpp::AllowRenderTag) const;\
-    };\
     struct Template : public htcpp::ITemplate<Cfg>{\
-        TemplateRenderer renderer_;\
-    \
+        class Renderer{\
+            const Cfg& cfg;\
+            std::ostream& out;\
+        public:\
+            Renderer(const Cfg& cfg, std::ostream& out)\
+                : cfg(cfg), out(out)\
+            {}\)"};
+    result += "\n";
+    for (const auto& procedure : procedures) {
+        result += "            std::string " + procedure->name() + "() const;\\\n";
+    }
+    result += R"(\
+            void renderHTML() const;\
+            void renderHTMLPart(const std::string& name) const;\
+        };\
+        \
         std::string render(const Cfg& cfg) const override\
         {\
             auto stream  = std::stringstream{};\
-            renderer_.renderHTML(cfg, stream, htcpp::AllowRenderTag{});\
+            auto renderer = Renderer{cfg, stream};\
+            renderer.renderHTML();\
             return stream.str();\
         }\
         std::string render(const std::string& renderFuncName, const Cfg& cfg) const override\
         {\
             auto stream  = std::stringstream{};\
-            renderer_.renderHTMLPart(renderFuncName, cfg, stream, htcpp::AllowRenderTag{});\
+            auto renderer = Renderer{cfg, stream};\
+            renderer.renderHTMLPart(renderFuncName);\
             return stream.str();\
         }\
     \
         void print(const Cfg& cfg) const override\
         {\
-            renderer_.renderHTML(cfg, std::cout, htcpp::AllowRenderTag{});\
+            auto renderer = Renderer{cfg, std::cout};\
+            renderer.renderHTML();\
         }\
         void print(const std::string& renderFuncName, const Cfg& cfg) const override\
         {\
-            renderer_.renderHTMLPart(renderFuncName, cfg, std::cout, htcpp::AllowRenderTag{});\
+            auto renderer = Renderer{cfg, std::cout};\
+            renderer.renderHTMLPart(renderFuncName);\
         }\
     \
         void print(const Cfg& cfg, std::ostream& stream) const override\
         {\
-            renderer_.renderHTML(cfg, stream, htcpp::AllowRenderTag{});\
+            auto renderer = Renderer{cfg, stream};\
+            renderer.renderHTML();\
         }\
         void print(const std::string& renderFuncName, const Cfg& cfg, std::ostream& stream) const override\
         {\
-            renderer_.renderHTMLPart(renderFuncName, cfg, stream, htcpp::AllowRenderTag{});\
+            auto renderer = Renderer{cfg, stream};\
+            renderer.renderHTMLPart(renderFuncName);\
         }\
     };\
     }\
@@ -101,41 +107,32 @@ std::string SharedLibTranspilerRenderer::generateCode(const std::vector<gsl::not
         delete ptr;\
     }\
 
-    )"};
+    )";
     for (const auto& globalStatement : globalStatements)
         result += globalStatement->renderingCode() + "\n";
 
-    result += "namespace htcpp{\n";
+    result += "namespace {\n";
     for (const auto& procedure : procedures) {
-        result += "void " + procedure->name() + "(const Cfg& cfg, std::ostream& out, AllowRenderTag){\n";
-        result += procedure->renderingCode() + "\n}\n";
+        result += "std::string Template::Renderer::" + procedure->name() + "() const{\n";
+        result += procedure->renderingCode() + "\n return {};}\n";
     }
-    result += "\n}\n";
-
-
-    result +="namespace {\n"
-            "void TemplateRenderer::renderHTML(const Cfg& cfg, std::ostream& out, htcpp::AllowRenderTag tag) const\n"
-            "{\n";
-    for (const auto& procedure : procedures)
-        result += "auto " + procedure->name() + " = [&cfg, &out, tag]{htcpp::" + procedure->name() +
-                  "(cfg, out, tag); return std::string{};};\n";
+    result += "void Template::Renderer::renderHTML() const\n{\n";
 
     for (auto& node : nodes)
         result += node->renderingCode();
     result += "\n}\n";
 
-    result +=
-            "void TemplateRenderer::renderHTMLPart(const std::string& name, const Cfg& cfg, std::ostream& out, htcpp::AllowRenderTag tag) const\n"
-            "{\n"
-            "(void)name; (void)cfg; (void)out; (void)tag;\n";
+    result += "void Template::Renderer::renderHTMLPart(const std::string& name) const\n"
+              "{\n";
+    result += "static_cast<void>(name);\n";
     for (const auto& procedure : procedures) {
         result += "if (name == \"" + procedure->name() + "\")\n";
-        result += "    htcpp::" + procedure->name() + "(cfg, out, tag);";
+        result += "    " + procedure->name() + "();\n";
     }
     result += "\n}\n";
     result += "}";
 
-    return result;
+    return {{GeneratedFileType::Source, result}};
 }
 
-}
+} //namespace htcpp
