@@ -1,16 +1,17 @@
 cmake_minimum_required(VERSION 3.18)
-project(ex_04)
+project(ex_06)
 
 include(../../hypertextcpp.cmake)
 
-hypertextcpp_GenerateHeader(
+hypertextcpp_GenerateHeaderAndSource(
         TEMPLATE_FILE todolist.htcpp
         CLASS_NAME TodoList
-)
+        CONFIG_CLASS_NAME PageParams)
 
 set(SRC
     todolist_printer.cpp
-    todolist.h)
+    todolist.h
+    todolist.cpp)
 
 add_executable(${PROJECT_NAME} ${SRC})
 

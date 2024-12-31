@@ -3,7 +3,8 @@ project(ex_01)
 
 include(../../hypertextcpp.cmake)
 
-hypertextcpp_GenerateHeader(NAME todolist)
+hypertextcpp_GenerateHeader(
+        TEMPLATE_FILE todolist.htcpp)
 
 set(SRC
         todolist_printer.cpp

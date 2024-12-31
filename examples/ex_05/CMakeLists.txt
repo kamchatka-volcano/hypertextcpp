@@ -14,7 +14,6 @@ target_link_libraries(${PROJECT_NAME} ${CMAKE_DL_LIBS})
 
 include(../../hypertextcpp.cmake)
 hypertextcpp_BuildSharedLibrary(
-        NAME todolist
-        OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
+        TEMPLATE_FILE todolist.htcpp
 )
 add_dependencies(${PROJECT_NAME} todolist)

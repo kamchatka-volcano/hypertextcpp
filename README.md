@@ -252,33 +252,66 @@ Now the tasks list can be output to stdout by itself like this:
 ### Command line parameters
  ```console
 kamchatka-volcano@home:~$ hypertextcpp --help
-Usage: hypertextcpp <input> [params] [flags] 
+Usage: hypertextcpp [commands] [flags] 
+Flags:
+  --help                                      show usage info and exit
+Commands:
+    generateHeaderOnly [options]              generate header only file
+    generateSharedLibrarySource [options]     generate shared library source 
+                                                file
+    generateHeaderAndSource [options]         generate header and source files
+ ```
+
+Single header renderer generation:
+ ```console
+kamchatka-volcano@home:~$ hypertextcpp generateHeaderOnly --help
+Usage: hypertextcpp generateHeaderOnly <input> [params] [flags] 
+Arguments:
+    <input> (path)         .htcpp file to transpile
+   -outputDir=<path>       output dir
+                             (if empty, current working directory is used)
+                             (optional, default: "")
+   -className=<string>     generated class name
+                             (if empty, input file name is used)
+                             (optional, default: "")
+Flags:
+  --help                   show usage info and exit
+ ```
+
+Header and source renderer generation:
+ ```console
+kamchatka-volcano@home:~$ hypertextcpp generateHeaderAndSource --help
+Usage: hypertextcpp generateHeaderAndSource <input> -configClassName=<string> [params] [flags] 
 Arguments:
     <input> (path)               .htcpp file to transpile
 Parameters:
-   -o, --output <path>           output c++ file path
+   -configClassName=<string>     config class name
+   -outputDir=<path>             output dir
                                    (if empty, current working directory is used)
                                    (optional, default: "")
-   -c, --class-name <string>     generated class name
-                                   (optional)
+   -className=<string>           generated class name
+                                   (if empty, input file name is used)
+                                   (optional, default: "")
 Flags:
-   -s, --shared-lib              generate result as shared library source 
-                                   files
-       --class-pascalcase        generate class name by using .htcpp filename 
-                                   in PascalCase
-       --class-snakecase         generate class name by using .htcpp filename 
-                                   in snake_case
-       --class-lowercase         generate class name by using .htcpp filename 
-                                   in lowercase
-       --help                    show usage info and exit
-
-
-Process finished with exit code 0
-
+  --help                         show usage info and exit
  ```
 
+Shared library renderer generation:
+ ```console
+kamchatka-volcano@home:~$ hypertextcpp generateSharedLibrarySource --help
+Usage: hypertextcpp generateSharedLibrarySource <input> [params] [flags] 
+Arguments:
+    <input> (path)       .htcpp file to transpile
+   -outputDir=<path>     output dir
+                           (if empty, current working directory is used)
+                           (optional, default: "")
+Flags:
+  --help                 show usage info and exit
+ ```
+
+
 ### Single header renderer
-By default, the **hypertextcpp** transpiler works in a single header mode and generates a C++ header file that you're supposed to simply include in your project. A generated renderer class has the name of the `.htcpp` template file. You can override the name by using the `--class-name` parameter, or you can specify one of the following flags: `--class-pascalcase`, `--class-snakecase`, or `--class-lowercase` to use the `.htcpp` template's filename converted to the corresponding case as a class name.
+In this mode, the **hypertextcpp** generates a C++ header file that you're supposed to simply include in your project. A generated renderer class has the name of the `.htcpp` template file.
 Converting the template to C++ code each time you modify it is a laborious task, so it makes sense to add this step to your build process. To do this with CMake you can use `hypertextcpp_GenerateHeader` function from the `hypertextcpp.cmake` file.
 Note that this function launches the `hypertextcpp` executable, so it should be installed on your system first. 
 
@@ -288,23 +321,37 @@ cmake_minimum_required(VERSION 3.18)
 
 
 include(../../hypertextcpp.cmake)
-hypertextcpp_GenerateHeader(NAME todolist CLASS_NAME TodoList)
+hypertextcpp_GenerateHeader(
+  TEMPLATE_FILE todolist.htcpp 
+  CLASS_NAME TodoList
+)
 
 set(SRC
     todolist_printer.cpp
     todolist.h)
 
+#Please note that to generate the header todolist.h, it must pe passed to the target sources    
 add_executable(todolist_printer ${SRC})
 
 target_compile_features(todolist_printer PUBLIC cxx_std_17)
 set_target_properties(todolist_printer PROPERTIES CXX_EXTENSIONS OFF)
 ```
 
-Now, every time you change the template, the corresponding header will be regenerated on the next build.
+Now, every time you change the template `todolist.htcpp`, the corresponding header will be regenerated on the next build.
+
+### Header and source renderer
+It can feel quite wasteful to rebuild all object files that include the renderer header each time the template file is changed, so `hypertextcpp` supports the generation of the renderer as a header and implementation file. In this mode, the generated rendering methods aren't function templates, and you need to provide the config name as a command-line parameter and either define the config structure inside the template or include it from there (check `examples/ex_06` and `examples/ex_07`).
+To do this with CMake, you can use the `hypertextcpp_GenerateHeaderAndSource` function from the `hypertextcpp.cmake` file.
+
+```
+hypertextcpp_GenerateHeaderAndSource(
+        TEMPLATE_FILE todolist.htcpp
+        CONFIG_CLASS_NAME PageParams)
+```
 
 ### Shared library renderer
-It can feel quite wasteful to rebuild your project each time the template file is changed, so **hypertextcpp** supports the generation of a C++ source file for building templates in the form of shared libraries and linking them dynamically from your application.
-It requires duplicating the config declaration in the .htcpp template, registering it with the `HTCPP_CONFIG` macro in both the template and the application source, generating the renderer code with the `--shared-lib` command line flag, building the library, and loading it using the tiny API installed from the `shared_lib_api/` directory. It sounds scarier than it is, so let's quickly update the todolist example to see how it works.
+ **hypertextcpp** also supports the generation of a C++ source file for building templates in the form of shared libraries and linking them dynamically from your application. This way it's possible to rebuild the template and update it without restarting the application.
+It requires duplicating the config declaration in the .htcpp template, registering it with the `HTCPP_CONFIG` macro in both the template and the application source, generating the renderer code with the `generateSharedLibrarySource` command, building the library, and loading it using the tiny API installed from the `shared_lib_api/` directory. It sounds scarier than it is, so let's quickly update the todolist example to see how it works.
 
 First we need to copy the config structure declaration in the template:  
 [`examples/05/todolist.htcpp`](examples/05/todolist.htcpp)
@@ -336,7 +383,7 @@ First we need to copy the config structure declaration in the template:
 </html>
 ```
 
-Be sure to use an exact copy; any mismatch of the config structure between the template and the application can't be handled gracefully. So, if you try to load a template library with a different structure, you'll definitely crash the application and maybe hurt someone as a result.
+Be sure to use an exact copy; any mismatch in the config structure between the template and the application can't be handled gracefully. So, if you try to load a template library with a different structure, your application will abort with a runtime error. This means that by using a htcpp template in the form of shared libraries, you lose one of the main advantages of hypertextcpp—compile-time type safety. Because of this, it's recommended to use this mode only after your template config has stabilized and doesn't change often.
 
 Next, we need to build our template renderer as a library. It's not possible to bundle multiple template files in one library, so we can build a library from a single `.htcpp` file by using the `hypertextcpp_BuildSharedLibrary` CMake function from `hypertextcpp.cmake`:
 

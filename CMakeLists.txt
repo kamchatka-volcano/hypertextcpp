@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.18)
-project(hypertextcpp VERSION 1.2.1 DESCRIPTION "hypertextcpp")
+project(hypertextcpp VERSION 2.0.0 DESCRIPTION "hypertextcpp")
 
 include(external/seal_lake)
 
-SealLake_Import(cmdlime 2.6.0
+SealLake_Import(cmdlime 2.7.0
         GIT_REPOSITORY https://github.com/kamchatka-volcano/cmdlime
-        GIT_TAG dev
+        GIT_TAG v2.7.0
 )
 
 SealLake_Import(sfun 5.1.0
@@ -24,6 +24,10 @@ SealLake_Bundle(
         GIT_REPOSITORY https://github.com/ericniebler/range-v3
         GIT_TAG        0.12.0
 )
+SealLake_Import(fmt 9.1.0
+        GIT_REPOSITORY https://github.com/fmtlib/fmt
+        GIT_TAG 9.1.0
+)
 
 set(SRC
     src/codenode.cpp
@@ -41,7 +45,8 @@ set(SRC
     src/utils.cpp
     src/node_utils.cpp
     src/single_header_transpiler_renderer.cpp
-    src/shared_lib_transpiler_renderer.cpp)
+    src/shared_lib_transpiler_renderer.cpp
+    src/header_and_source_transpiler_renderer.cpp)
 
 
 SealLake_Executable(
@@ -54,6 +59,7 @@ SealLake_Executable(
             cmdlime::cmdlime
             sfun::sfun
             Microsoft.GSL::GSL
+            fmt::fmt
 )
 
 SealLake_OptionalSubProjects(tests examples)
