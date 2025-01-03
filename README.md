@@ -392,8 +392,7 @@ Next, we need to build our template renderer as a library. It's not possible to 
 cmake_minimum_required(VERSION 3.18)
 
 hypertextcpp_BuildSharedLibrary(
-        NAME todolist
-        OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
+        TEMPLATE_FILE todolist.htcpp
 )
 add_dependencies(${PROJECT_NAME} todolist)
 ```
