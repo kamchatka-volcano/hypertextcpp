@@ -77,6 +77,7 @@ kamchatka-volcano@home:~$ ./todolist_printer
 * [Code generation](#code-generation)
     * [Command line parameters](#command-line-parameters)
     * [Single header renderer](#single-header-renderer)
+    * [Header and source renderer](#header-and-source-renderer)
     * [Shared library renderer](#shared-library-renderer)
 * [Installation](#installation)
 * [Running tests](#running-tests)
