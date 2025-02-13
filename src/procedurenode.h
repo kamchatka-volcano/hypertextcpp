@@ -15,6 +15,7 @@ class ProcedureNode : public IDocumentNode,
 
 public:
     ProcedureNode(std::string procedureName, StreamReader& stream);
+    ProcedureNode(std::string procedureName, std::unique_ptr<IDocumentNode> contentNode);
     const std::string& name() const;
 
     std::string renderingCode() const override;

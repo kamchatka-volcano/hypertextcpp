@@ -1,9 +1,9 @@
 #include "transpiler.h"
+#include "codenode.h"
 #include "errors.h"
 #include "itranspiler_renderer.h"
 #include "node_utils.h"
 #include "nodereader.h"
-#include "procedurenode.h"
 #include "streamreader.h"
 #include "utils.h"
 #include <range/v3/range/conversion.hpp>
@@ -38,7 +38,7 @@ void Transpiler::parseTemplateFile(const fs::path& filePath)
 
 bool Transpiler::readNode(StreamReader& stream)
 {
-    auto node = readNonTagNode(stream);
+    auto node = readNonTagContentNode(stream);
     if (node) {
         utils::consumeReadText(readText_, nodeList_, node.get());
         nodeList_.push_back(std::move(node));
@@ -65,8 +65,8 @@ std::vector<gsl::not_null<IDocumentNodeRenderer*>> nodesToNodeRenderers(
 {
     const auto toRenderer = [](const std::unique_ptr<IDocumentNode>& node)
     {
-        Expects(node->interface<IDocumentNodeRenderer>().has_value());
-        return gsl::not_null{ &node->interface<IDocumentNodeRenderer>().value()};
+        Expects(node->getInterface<IDocumentNodeRenderer>().has_value());
+        return gsl::not_null{&node->getInterface<IDocumentNodeRenderer>().value()};
     };
     return nodes | ranges::views::transform(toRenderer) | ranges::to<std::vector>();
 }
@@ -77,6 +77,9 @@ std::unordered_map<GeneratedFileType, std::string> Transpiler::process(const fs:
 {
     reset();
     parseTemplateFile(filePath);
+    for (auto& node : nodeList_)
+        utils::replaceElementsWithIdsToProcedures(node, procedureList_);
+
     return renderer_.get().generateCode(
             nodesToNodeRenderers(globalStatementList_),
             procedureList_,

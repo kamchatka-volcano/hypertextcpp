@@ -1,4 +1,5 @@
 #include "tagnode.h"
+#include "attribute_node.h"
 #include "control_flow_statement_node.h"
 #include "errors.h"
 #include "nodereader.h"
@@ -13,6 +14,10 @@ namespace htcpp {
 TagNode::TagNode(StreamReader& stream)
 {
     load(stream);
+}
+std::vector<std::unique_ptr<IDocumentNode>>& TagNode::content()
+{
+    return contentNodes_;
 }
 
 void TagNode::load(StreamReader& stream)
@@ -100,7 +105,7 @@ TagNode::ReadResult TagNode::readAttributes(StreamReader& stream)
         return ReadResult::Ok;
     }
 
-    auto node = readTagAttributeNode(stream);
+    auto node = readAttributeNode(stream);
     if (node) {
         utils::consumeReadAttributesText(readText_, attributeNodes_);
         attributeNodes_.emplace_back(std::move(node));
@@ -111,6 +116,48 @@ TagNode::ReadResult TagNode::readAttributes(StreamReader& stream)
     return ReadResult::Ok;
 }
 
+template<typename T>
+sfun::optional_ref<T> getIConvertibleToProcedure(auto selfPtr)
+{
+    if (std::ranges::any_of(
+                selfPtr->attributeNodes_,
+                [](const auto& node)
+                {
+                    return node->template getInterface<IAttribute>().has_value();
+                }))
+        return selfPtr;
+
+    return std::nullopt;
+}
+
+sfun::optional_ref<const IConvertibleToProcedure> TagNode::getIConvertibleToProcedure() const
+{
+    return getIConvertibleToProcedure<const IConvertibleToProcedure>(this);
+}
+
+sfun::optional_ref<IConvertibleToProcedure> TagNode::getIConvertibleToProcedure()
+{
+    return getIConvertibleToProcedure<IConvertibleToProcedure>(this);
+}
+
+std::string_view TagNode::procedureName() const
+{
+    auto idAttribute = std::ranges::find_if(
+            attributeNodes_,
+            [](const auto& node)
+            {
+                auto attribute = node->template getInterface<IAttribute>();
+                if (!attribute.has_value())
+                    return false;
+                return attribute->name() == "htcpp-id";
+            });
+
+    if (idAttribute == attributeNodes_.end())
+        return {};
+
+    return idAttribute->get()->template getInterface<IAttribute>()->value();
+}
+
 std::vector<std::unique_ptr<IDocumentNode>> TagNode::flatten()
 {
     auto result = std::vector<std::unique_ptr<IDocumentNode>>{};
@@ -118,15 +165,18 @@ std::vector<std::unique_ptr<IDocumentNode>> TagNode::flatten()
         result.emplace_back(
                 std::make_unique<ControlFlowStatementNode>(ControlFlowStatementNodeType::Open, extension_.value()));
     result.emplace_back(std::make_unique<TextNode>("<" + name_));
-    for (auto& node : attributeNodes_){
-        if (auto nodeCollection = node->interface<INodeCollection>())
+    for (auto& node : attributeNodes_) {
+        if (node->getInterface<IAttribute>().has_value())
+            continue;
+
+        if (auto nodeCollection = node->getInterface<INodeCollection>())
             std::ranges::move(nodeCollection->flatten(), std::back_inserter(result));
         else
             result.emplace_back(std::move(node));
     }
     result.emplace_back(std::make_unique<TextNode>(">"));
-    for (auto& node : contentNodes_){
-        if (auto nodeCollection = node->interface<INodeCollection>())
+    for (auto& node : contentNodes_) {
+        if (auto nodeCollection = node->getInterface<INodeCollection>())
             std::ranges::move(nodeCollection->flatten(), std::back_inserter(result));
         else
             result.emplace_back(std::move(node));

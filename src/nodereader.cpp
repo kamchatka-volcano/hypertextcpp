@@ -4,6 +4,7 @@
 #include "streamreader.h"
 #include "codenode.h"
 #include "procedurenode.h"
+#include "attribute_node.h"
 
 namespace htcpp{
 
@@ -20,10 +21,17 @@ std::unique_ptr<IDocumentNode> readCommonNodes(StreamReader& stream)
         return std::make_unique<StatementNode>(stream);
     return nullptr;
 }
+
 }
 
-std::unique_ptr<IDocumentNode> readTagAttributeNode(StreamReader& stream)
+std::unique_ptr<IDocumentNode> readAttributeNode(StreamReader& stream)
 {
+    if (stream.atEnd())
+        return nullptr;
+
+    if (stream.peek(8) == "htcpp-id")
+        return std::make_unique<AttributeNode>("htcpp-id", stream);
+
     return readCommonNodes(stream);
 }
 
@@ -37,7 +45,7 @@ std::unique_ptr<IDocumentNode> readTagContentNode(StreamReader& stream)
     return readCommonNodes(stream);
 }
 
-std::unique_ptr<IDocumentNode> readNonTagNode(StreamReader& stream)
+std::unique_ptr<IDocumentNode> readNonTagContentNode(StreamReader& stream)
 {
     if (stream.atEnd())
         return nullptr;
@@ -45,6 +53,17 @@ std::unique_ptr<IDocumentNode> readNonTagNode(StreamReader& stream)
         return std::make_unique<TagNode>(stream);
 
     return readCommonNodes(stream);
+}
+
+std::unique_ptr<IDocumentNode> readSectionContentNode(StreamReader& stream)
+{
+    if (stream.atEnd())
+        return nullptr;
+
+    if (stream.peek() == "<")
+        return std::make_unique<TagNode>(stream);
+
+    return readAttributeNode(stream);
 }
 
 std::unique_ptr<IDocumentNode> readGlobalStatement(StreamReader& stream)

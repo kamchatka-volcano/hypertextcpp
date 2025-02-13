@@ -21,6 +21,7 @@ set(SRC
     ../src/utils.cpp
     ../src/node_utils.cpp
         ../src/control_flow_statement_node.cpp
+        ../src/attribute_node.cpp
     )
 
 SealLake_GoogleTest(

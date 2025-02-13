@@ -1,20 +1,21 @@
 #include "utils.h"
+#include "codenode.h"
+#include "errors.h"
+#include "procedurenode.h"
 #include "streamreader.h"
 #include "streamreaderposition.h"
-#include "errors.h"
-#include "textnode.h"
 #include "tagnode.h"
-#include <string>
+#include "textnode.h"
 #include <algorithm>
-#include <vector>
 #include <sstream>
+#include <string>
+#include <vector>
 
-
-namespace htcpp::utils{
+namespace htcpp::utils {
 
 //https://developer.mozilla.org/en-US/docs/Glossary/Empty_element
 bool isTagEmptyElement(const std::string& tagName)
-{    
+{
     if (tagName == "area")
         return true;
     if (tagName == "base")
@@ -53,7 +54,13 @@ bool isTagEmptyElement(const std::string& tagName)
 
 bool isBlank(const std::string& str)
 {
-    auto nonWhitespaceIt = std::find_if(str.begin(), str.end(), [](auto ch){return !std::isspace(ch);});
+    auto nonWhitespaceIt = std::find_if(
+            str.begin(),
+            str.end(),
+            [](auto ch)
+            {
+                return !std::isspace(ch);
+            });
     return nonWhitespaceIt == str.end();
 }
 
@@ -64,19 +71,19 @@ std::string transformRawStrings(const std::string& cppCode, const StreamReaderPo
     auto stream = StreamReader{codeStream, position};
     auto insideString = false;
     auto rawStringPos = StreamReaderPosition{};
-    while (!stream.atEnd()){
-         auto res = stream.read();
-         if (res == "`"){
-             if (!insideString) {
-                 rawStringPos = stream.position();
-                 result += "R\"_htcpp_str_(";
-             }
-             else
-                 result += ")_htcpp_str_\"";
-             insideString = !insideString;
-         }
-         else
-             result += res;
+    while (!stream.atEnd()) {
+        auto res = stream.read();
+        if (res == "`") {
+            if (!insideString) {
+                rawStringPos = stream.position();
+                result += "R\"_htcpp_str_(";
+            }
+            else
+                result += ")_htcpp_str_\"";
+            insideString = !insideString;
+        }
+        else
+            result += res;
     }
     if (insideString)
         throw TemplateError{rawStringPos, "String is unclosed"};
@@ -84,26 +91,36 @@ std::string transformRawStrings(const std::string& cppCode, const StreamReaderPo
     return result;
 }
 
-namespace{
+namespace {
 void trimFrontNewLine(std::string& str)
-{    
+{
     if (str.find('\n') == 0 || str.find("\r\n") == 0)
-        str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](int ch) {
-            return !std::isspace(ch);
-        }));
+        str.erase(
+                str.begin(),
+                std::find_if(
+                        str.begin(),
+                        str.end(),
+                        [](int ch)
+                        {
+                            return !std::isspace(ch);
+                        }));
 }
 
 void trimLastBlankLine(std::string& str)
 {
-    auto trimFrom =
-    [&str](auto newLinePos)
+    auto trimFrom = [&str](auto newLinePos)
     {
         if (newLinePos == std::string::npos)
             return;
         if (newLinePos > 0 && std::isspace(str[newLinePos - 1]))
             return;
-        const auto isLastLineBlank = std::find_if(str.begin() + static_cast<int>(newLinePos), str.end(),
-                                                  [](auto ch){return !std::isspace(ch);}) == str.end();
+        const auto isLastLineBlank = std::find_if(
+                                             str.begin() + static_cast<int>(newLinePos),
+                                             str.end(),
+                                             [](auto ch)
+                                             {
+                                                 return !std::isspace(ch);
+                                             }) == str.end();
         if (isLastLineBlank)
             str.resize(newLinePos);
     };
@@ -111,10 +128,10 @@ void trimLastBlankLine(std::string& str)
     trimFrom(str.rfind("\r\n"));
 }
 
-}
+} //namespace
 
 void trimBlankLines(std::string& str)
-{    
+{
     trimFrontNewLine(str);
     trimLastBlankLine(str);
 }
@@ -135,7 +152,7 @@ void consumeReadText(std::string& readText, std::vector<std::unique_ptr<IDocumen
     if (readText.empty())
         return;
 
-    if (nodes.empty() || nodes.back()->hasType<TagNode>() || (newNode && newNode->hasType<TagNode>())){
+    if (nodes.empty() || nodes.back()->is<TagNode>() || (newNode && newNode->is<TagNode>())) {
         nodes.emplace_back(std::make_unique<TextNode>(readText));
         readText.clear();
         return;
@@ -147,4 +164,23 @@ void consumeReadText(std::string& readText, std::vector<std::unique_ptr<IDocumen
     readText.clear();
 }
 
+void replaceElementsWithIdsToProcedures(
+        std::unique_ptr<IDocumentNode>& node,
+        std::vector<std::unique_ptr<ProcedureNode>>& procedureNodes)
+{
+    if (auto asNodeColletion = node->getInterface<INodeCollection>()) {
+        for (auto& contentNode : asNodeColletion->content())
+            replaceElementsWithIdsToProcedures(contentNode, procedureNodes);
+    }
+
+    if (const auto asProcedure = node->getInterface<IConvertibleToProcedure>()) {
+        const auto procedureName = std::string{asProcedure->procedureName()};
+        procedureNodes.emplace_back(std::make_unique<ProcedureNode>(procedureName, std::move(node)));
+        auto strstream = std::stringstream{};
+        strstream << "$(" << procedureName << "())";
+        auto streamReader = StreamReader{strstream};
+        node = std::make_unique<ExpressionNode>(streamReader);
+    }
 }
+
+} //namespace htcpp::utils

@@ -11,7 +11,8 @@ public:
     explicit StreamReader(std::istream& stream, const StreamReaderPosition& startPosition = StreamReaderPosition{1, 1});
     std::string read(int size = 1);
     std::string peek(int size = 1);
-    void skip(int size);
+    void skip(int size = 1);
+    void skipWhitespace();
     bool atEnd();
     StreamReaderPosition position() const;
 

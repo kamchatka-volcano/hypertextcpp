@@ -5,6 +5,7 @@
 
 namespace htcpp{
 class IDocumentNode;
+class ProcedureNode;
 struct StreamReaderPosition;
 }
 
@@ -18,4 +19,8 @@ void trimBlankLines(std::string& str);
 void consumeReadAttributesText(std::string& readText, std::vector<std::unique_ptr<IDocumentNode>>& nodes);
 void consumeReadText(std::string& readText, std::vector<std::unique_ptr<IDocumentNode>>& nodes,
         IDocumentNode* newNode = nullptr);
+
+void replaceElementsWithIdsToProcedures(
+        std::unique_ptr<IDocumentNode>& node,
+        std::vector<std::unique_ptr<ProcedureNode>>& procedureNodes);
 }

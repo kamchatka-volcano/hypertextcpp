@@ -1,24 +1,42 @@
 #include "assert_exception.h"
 #include "idocumentnoderenderer.h"
 #include "node_utils.h"
-#include <gtest/gtest.h>
+#include "procedurenode.h"
+#include "utils.h"
 #include <errors.h>
-#include <tagnode.h>
-#include <streamreader.h>
 #include <nodereader.h>
+#include <streamreader.h>
+#include <tagnode.h>
+#include <sfun/optional_ref.h>
+#include <gtest/gtest.h>
 
-namespace{
+namespace {
 
-void test(const std::string& input, const std::string& expected)
+void test(
+        const std::string& input,
+        const std::string& expected,
+        sfun::optional_ref<std::vector<std::unique_ptr<htcpp::ProcedureNode>>> procedureNodes = std::nullopt)
 {
     auto stream = std::istringstream{input};
     auto streamReader = htcpp::StreamReader{stream};
     auto funcMap = std::map<std::string, std::string>{};
-    auto tagNode = htcpp::TagNode{streamReader};
-    auto nodes = htcpp::optimizeNodes(tagNode.flatten());
+    std::unique_ptr<htcpp::IDocumentNode> tagNode = std::make_unique<htcpp::TagNode>(streamReader);
+    if (procedureNodes.has_value())
+        htcpp::utils::replaceElementsWithIdsToProcedures(tagNode, procedureNodes.value());
+    else {
+        auto procedures = std::vector<std::unique_ptr<htcpp::ProcedureNode>>{};
+        htcpp::utils::replaceElementsWithIdsToProcedures(tagNode, procedures);
+    }
+
     auto result = std::string{};
-    for (auto& node : nodes)
-        result += node->interface<htcpp::IDocumentNodeRenderer>()->renderingCode();
+    if (tagNode->getInterface<htcpp::INodeCollection>()) {
+        auto nodes = htcpp::optimizeNodes(tagNode->getInterface<htcpp::INodeCollection>()->flatten());
+        for (auto& node : nodes)
+            result += node->getInterface<htcpp::IDocumentNodeRenderer>()->renderingCode();
+    }
+    else {
+        result += tagNode->getInterface<htcpp::IDocumentNodeRenderer>()->renderingCode();
+    }
     EXPECT_EQ(result, expected);
 }
 
@@ -165,4 +183,34 @@ TEST(InvalidTagNode, MultipleExtensionsTwoLoops)
 {
     testError("<p>@(auto i; i < 5; ++i) Hello world! </p>@(auto i; i < 5; ++i)",
               "[line:1, column:43] Tag can't have multiple extensions");
+}
+
+TEST(TagNode, WithIdAttribute)
+{
+    auto procedures = std::vector<std::unique_ptr<htcpp::ProcedureNode>>{};
+    test("<div htcpp-id=\"test\" id=\"9\"> Hello world! </div>", "out << (test());", procedures);
+    ASSERT_EQ(procedures.size(), 1);
+    EXPECT_EQ(procedures.front()->name(), "test");
+    EXPECT_EQ(
+            procedures.front()->renderingCode(),
+            "out << R\"_htcpp_str_(<div  id=\"9\"> Hello world! </div>)_htcpp_str_\";");
+}
+
+TEST(TagNode, NestedWithIdAttribute)
+{
+    auto procedures = std::vector<std::unique_ptr<htcpp::ProcedureNode>>{};
+    test("<div htcpp-id=\"test\" id=\"9\"> <div htcpp-id=\"test2\">Hello world!</div> <div htcpp-id=\"test3\">Hello "
+         "world2!</div> </div>",
+         "out << (test());",
+         procedures);
+    ASSERT_EQ(procedures.size(), 3);
+    EXPECT_EQ(procedures.at(0)->name(), "test2");
+    EXPECT_EQ(procedures.at(0)->renderingCode(), "out << R\"_htcpp_str_(<div >Hello world!</div>)_htcpp_str_\";");
+    EXPECT_EQ(procedures.at(1)->name(), "test3");
+    EXPECT_EQ(procedures.at(1)->renderingCode(), "out << R\"_htcpp_str_(<div >Hello world2!</div>)_htcpp_str_\";");
+    EXPECT_EQ(procedures.at(2)->name(), "test");
+    EXPECT_EQ(
+            procedures.at(2)->renderingCode(),
+            "out << R\"_htcpp_str_(<div  id=\"9\"> )_htcpp_str_\";out << (test2());out << R\"_htcpp_str_( "
+            ")_htcpp_str_\";out << (test3());out << R\"_htcpp_str_( </div>)_htcpp_str_\";");
 }

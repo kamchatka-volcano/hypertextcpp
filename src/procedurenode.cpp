@@ -8,12 +8,20 @@
 
 namespace htcpp{
 
-ProcedureNode::ProcedureNode(std::string procedureName,
-                             StreamReader& stream)
+ProcedureNode::ProcedureNode(std::string procedureName, StreamReader& stream)
     : procedureName_(std::move(procedureName))
 {
     Expects(!procedureName_.empty());
     load(stream);
+}
+
+ProcedureNode::ProcedureNode(std::string procedureName, std::unique_ptr<IDocumentNode> contentNode)
+    : procedureName_(std::move(procedureName))
+{
+    Expects(!procedureName_.empty());
+    auto contentNodes = std::vector<std::unique_ptr<IDocumentNode>>{};
+    contentNodes.emplace_back(std::move(contentNode));
+    contentNodes_ = optimizeNodes(flattenNodes(std::move(contentNodes)));
 }
 
 const std::string& ProcedureNode::name() const
@@ -35,7 +43,7 @@ void ProcedureNode::load(StreamReader& stream)
             contentNodes_ = optimizeNodes(flattenNodes(std::move(contentNodes_)));
             return;
         }
-        auto node = readNonTagNode(stream);
+        auto node = readNonTagContentNode(stream);
         if (node){
             utils::consumeReadText(readText, contentNodes_, node.get());
             contentNodes_.emplace_back(std::move(node));
@@ -50,7 +58,7 @@ std::string ProcedureNode::renderingCode() const
 {
     auto result = std::string{};
     for (auto& node : contentNodes_)
-        result += node->interface<IDocumentNodeRenderer>()->renderingCode();
+        result += node->getInterface<IDocumentNodeRenderer>()->renderingCode();
     return result;
 }
 

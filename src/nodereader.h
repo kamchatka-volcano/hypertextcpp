@@ -8,9 +8,10 @@ namespace htcpp{
     class ProcedureNode;
     class StreamReader;
 
-    std::unique_ptr<IDocumentNode> readTagAttributeNode(StreamReader& stream);
+    std::unique_ptr<IDocumentNode> readAttributeNode(StreamReader& stream);
     std::unique_ptr<IDocumentNode> readTagContentNode(StreamReader& stream);
-    std::unique_ptr<IDocumentNode> readNonTagNode(StreamReader& stream);
+    std::unique_ptr<IDocumentNode> readSectionContentNode(StreamReader& stream);
+    std::unique_ptr<IDocumentNode> readNonTagContentNode(StreamReader& stream);
     std::unique_ptr<IDocumentNode> readGlobalStatement(StreamReader& stream);
     std::unique_ptr<ProcedureNode> readProcedure(StreamReader& stream);
 }

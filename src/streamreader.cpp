@@ -1,4 +1,5 @@
 #include "streamreader.h"
+#include <sfun/string_utils.h>
 
 namespace htcpp{
 
@@ -48,6 +49,15 @@ std::string StreamReader::peek(int size)
 void StreamReader::skip(int size)
 {
     read(size);
+}
+
+void StreamReader::skipWhitespace()
+{
+    while (!atEnd()){
+        if (!sfun::isspace(peek().front()))
+            break;
+        skip();
+    }
 }
 
 bool StreamReader::atEnd()

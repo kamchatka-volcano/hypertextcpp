@@ -46,7 +46,8 @@ set(SRC
     src/node_utils.cpp
     src/single_header_transpiler_renderer.cpp
     src/shared_lib_transpiler_renderer.cpp
-    src/header_and_source_transpiler_renderer.cpp)
+        src/header_and_source_transpiler_renderer.cpp
+        src/attribute_node.cpp)
 
 
 SealLake_Executable(
