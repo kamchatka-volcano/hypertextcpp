@@ -63,10 +63,10 @@ std::vector<std::unique_ptr<IDocumentNode>> SectionNode::flatten()
         result.emplace_back(
                 std::make_unique<ControlFlowStatementNode>(ControlFlowStatementNodeType::Open, extension_.value()));
     for (auto& node : contentNodes_) {
-        if (node->getInterface<IAttribute>().has_value())
+        if (node->as<IAttribute>().has_value())
             continue;
 
-        if (auto nodeCollection = node->getInterface<INodeCollection>())
+        if (auto nodeCollection = node->as<INodeCollection>())
             std::ranges::move(nodeCollection->flatten(), std::back_inserter(result));
         else
             result.emplace_back(std::move(node));
@@ -78,46 +78,22 @@ std::vector<std::unique_ptr<IDocumentNode>> SectionNode::flatten()
     return result;
 }
 
-template<typename T>
-sfun::optional_ref<T> getIConvertibleToProcedure(auto selfPtr)
-{
-    if (std::ranges::any_of(
-                    selfPtr->contentNodes_,
-                    [](const auto& node)
-                    {
-                        return node->template getInterface<IAttribute>().has_value();
-                    }))
-        return selfPtr;
-
-    return std::nullopt;
-}
-
-sfun::optional_ref<const IConvertibleToProcedure> SectionNode::getIConvertibleToProcedure() const
-{
-    return getIConvertibleToProcedure<const IConvertibleToProcedure>(this);
-}
-
-sfun::optional_ref<IConvertibleToProcedure> SectionNode::getIConvertibleToProcedure()
-{
-    return getIConvertibleToProcedure<IConvertibleToProcedure>(this);
-}
-
-std::string_view SectionNode::procedureName() const
+std::optional<std::string_view> SectionNode::procedureName() const
 {
     auto idAttribute = std::ranges::find_if(
                 contentNodes_,
                 [](const auto& node)
                 {
-                    auto attribute = node->template getInterface<IAttribute>();
-                    if (!attribute.has_value())
-                        return false;
-                    return attribute->name() == "htcpp-id";
-                });
+                auto attribute = node->template as<IAttribute>();
+                if (!attribute.has_value())
+                    return false;
+                return attribute->name() == "htcpp-id";
+            });
 
     if (idAttribute == contentNodes_.end())
-        return {};
+        return std::nullopt;
 
-    return idAttribute->get()->template getInterface<IAttribute>()->value();
+    return idAttribute->get()->template as<IAttribute>()->value();
 }
 
 } //namespace htcpp

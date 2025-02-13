@@ -168,13 +168,16 @@ void replaceElementsWithIdsToProcedures(
         std::unique_ptr<IDocumentNode>& node,
         std::vector<std::unique_ptr<ProcedureNode>>& procedureNodes)
 {
-    if (auto asNodeColletion = node->getInterface<INodeCollection>()) {
+    if (auto asNodeColletion = node->as<INodeCollection>()) {
         for (auto& contentNode : asNodeColletion->content())
             replaceElementsWithIdsToProcedures(contentNode, procedureNodes);
     }
 
-    if (const auto asProcedure = node->getInterface<IConvertibleToProcedure>()) {
-        const auto procedureName = std::string{asProcedure->procedureName()};
+    if (const auto asProcedure = node->as<IConvertibleToProcedure>()) {
+        if (!asProcedure->procedureName().has_value())
+            return;
+
+        const auto procedureName = std::string{asProcedure->procedureName().value()};
         procedureNodes.emplace_back(std::make_unique<ProcedureNode>(procedureName, std::move(node)));
         auto strstream = std::stringstream{};
         strstream << "$(" << procedureName << "())";

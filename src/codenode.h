@@ -1,5 +1,4 @@
 #pragma once
-#include "document_node_interface_access.h"
 #include "idocumentnode.h"
 #include "idocumentnoderenderer.h"
 #include "nodeextension.h"
@@ -27,7 +26,6 @@ private:
 
 class ExpressionNode : public IDocumentNode,
                        public IDocumentNodeRenderer {
-    DOCUMENT_NODE_INTERFACE_ACCESS(IDocumentNodeRenderer)
 public:
     explicit ExpressionNode(StreamReader& stream);
     std::string renderingCode() const override;
@@ -38,8 +36,6 @@ private:
 
 class StatementNode : public IDocumentNode,
                       public IDocumentNodeRenderer {
-    DOCUMENT_NODE_INTERFACE_ACCESS(IDocumentNodeRenderer)
-
 public:
     explicit StatementNode(StreamReader& stream);
     std::string renderingCode() const override;
@@ -50,7 +46,6 @@ private:
 
 class GlobalStatementNode : public IDocumentNode,
                             public IDocumentNodeRenderer {
-    DOCUMENT_NODE_INTERFACE_ACCESS(IDocumentNodeRenderer)
 public:
     explicit GlobalStatementNode(StreamReader& stream);
     std::string renderingCode() const override;

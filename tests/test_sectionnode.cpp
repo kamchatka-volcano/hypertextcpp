@@ -26,13 +26,13 @@ void test(
         htcpp::utils::replaceElementsWithIdsToProcedures(sectionNode, procedures);
     }
     auto result = std::string{};
-    if (sectionNode->getInterface<htcpp::INodeCollection>()) {
-        auto nodes = htcpp::optimizeNodes(sectionNode->getInterface<htcpp::INodeCollection>()->flatten());
+    if (sectionNode->as<htcpp::INodeCollection>()) {
+        auto nodes = htcpp::optimizeNodes(sectionNode->as<htcpp::INodeCollection>()->flatten());
         for (auto& node : nodes)
-            result += node->getInterface<htcpp::IDocumentNodeRenderer>()->renderingCode();
+            result += node->as<htcpp::IDocumentNodeRenderer>()->renderingCode();
     }
     else
-        result = sectionNode->getInterface<htcpp::IDocumentNodeRenderer>()->renderingCode();
+        result = sectionNode->as<htcpp::IDocumentNodeRenderer>()->renderingCode();
     EXPECT_EQ(result, expected);
 }
 

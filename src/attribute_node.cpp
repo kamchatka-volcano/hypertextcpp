@@ -2,6 +2,7 @@
 #include "errors.h"
 #include "streamreader.h"
 #include <gsl/assert>
+#include <gsl/narrow>
 
 namespace htcpp {
 
@@ -23,7 +24,8 @@ std::string_view AttributeNode::value() const
 
 void AttributeNode::load(StreamReader& stream)
 {
-    Expects(stream.read(name_.size()) == name_);
+    Expects(stream.read(gsl::narrow_cast<int>(std::ssize(name_))) == name_);
+
     stream.skipWhitespace();
     if (stream.peek() != "=")
         throw TemplateError{stream.position(), "Attribute '" + name_ + "'s value is missing"};

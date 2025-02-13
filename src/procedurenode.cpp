@@ -1,10 +1,11 @@
 #include "procedurenode.h"
 #include "errors.h"
 #include "idocumentnoderenderer.h"
+#include "node_utils.h"
 #include "nodereader.h"
 #include "streamreader.h"
 #include "utils.h"
-#include "node_utils.h"
+#include <gsl/assert>
 
 namespace htcpp{
 
@@ -58,7 +59,7 @@ std::string ProcedureNode::renderingCode() const
 {
     auto result = std::string{};
     for (auto& node : contentNodes_)
-        result += node->getInterface<IDocumentNodeRenderer>()->renderingCode();
+        result += node->as<IDocumentNodeRenderer>()->renderingCode();
     return result;
 }
 

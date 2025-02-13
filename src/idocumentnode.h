@@ -1,12 +1,6 @@
 #pragma once
-#include "document_node_interface_access.h"
 #include <sfun/interface.h>
 #include <sfun/optional_ref.h>
-#include <gsl/assert>
-#include <string>
-#include <typeinfo>
-#include <memory>
-#include <vector>
 
 namespace htcpp {
 class INodeCollection;
@@ -22,39 +16,24 @@ class IDocumentNode : private sfun::interface<IDocumentNode>
 {
 public:
     template<typename TInterface>
-    auto getInterface() const
+    sfun::optional_ref<const TInterface> as() const
     {
-        return (this->*InterfaceGetterMapping<TInterface>::getterPtr())();
+        auto obj = dynamic_cast<const TInterface*>(this);
+        return obj ? sfun::optional_ref<const TInterface>{*obj} : sfun::optional_ref<const TInterface>{};
     }
 
     template<typename TInterface>
-    auto getInterface()
+    sfun::optional_ref<TInterface> as()
     {
-        return (this->*InterfaceGetterMapping<TInterface>::getterPtr())();
+        auto obj = dynamic_cast<TInterface*>(this);
+        return obj ? sfun::optional_ref<TInterface>{*obj} : sfun::optional_ref<TInterface>{};
     }
 
     template<typename T>
-    bool is()
+    bool is() const
     {
-        return typeid(*this) == typeid(T);
+        return as<T>().has_value();
     }
-
-private:
-    DOCUMENT_NODE_ADD_INTERFACE_GETTER(INodeCollection);
-    DOCUMENT_NODE_ADD_INTERFACE_GETTER(IDocumentNodeRenderer);
-    DOCUMENT_NODE_ADD_INTERFACE_GETTER(IRenderedAsStringPart);
-    DOCUMENT_NODE_ADD_INTERFACE_GETTER(IConvertibleToProcedure);
-    DOCUMENT_NODE_ADD_INTERFACE_GETTER(IAttribute);
-
-    template<typename TInterface>
-    friend struct InterfaceGetterMapping;
 };
-
-DOCUMENT_NODE_REGISTER_INTERFACE(INodeCollection);
-DOCUMENT_NODE_REGISTER_INTERFACE(IDocumentNodeRenderer);
-DOCUMENT_NODE_REGISTER_INTERFACE(IRenderedAsStringPart);
-DOCUMENT_NODE_REGISTER_INTERFACE(IConvertibleToProcedure);
-DOCUMENT_NODE_REGISTER_INTERFACE(IAttribute);
-
 
 } // namespace htcpp

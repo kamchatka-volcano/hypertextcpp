@@ -29,13 +29,13 @@ void test(
     }
 
     auto result = std::string{};
-    if (tagNode->getInterface<htcpp::INodeCollection>()) {
-        auto nodes = htcpp::optimizeNodes(tagNode->getInterface<htcpp::INodeCollection>()->flatten());
+    if (tagNode->as<htcpp::INodeCollection>()) {
+        auto nodes = htcpp::optimizeNodes(tagNode->as<htcpp::INodeCollection>()->flatten());
         for (auto& node : nodes)
-            result += node->getInterface<htcpp::IDocumentNodeRenderer>()->renderingCode();
+            result += node->as<htcpp::IDocumentNodeRenderer>()->renderingCode();
     }
     else {
-        result += tagNode->getInterface<htcpp::IDocumentNodeRenderer>()->renderingCode();
+        result += tagNode->as<htcpp::IDocumentNodeRenderer>()->renderingCode();
     }
     EXPECT_EQ(result, expected);
 }

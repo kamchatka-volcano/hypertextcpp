@@ -1,5 +1,4 @@
 #pragma once
-#include "document_node_interface_access.h"
 #include "idocumentnode.h"
 #include "idocumentnoderenderer.h"
 #include "nodeextension.h"
@@ -15,8 +14,6 @@ enum class ControlFlowStatementNodeType {
 
 class ControlFlowStatementNode : public IDocumentNode,
                                  public IDocumentNodeRenderer {
-    DOCUMENT_NODE_INTERFACE_ACCESS(IDocumentNodeRenderer)
-
 public:
     ControlFlowStatementNode(ControlFlowStatementNodeType, NodeExtension nodeExtension);
     std::string renderingCode() const override;

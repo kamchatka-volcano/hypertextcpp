@@ -65,8 +65,8 @@ std::vector<gsl::not_null<IDocumentNodeRenderer*>> nodesToNodeRenderers(
 {
     const auto toRenderer = [](const std::unique_ptr<IDocumentNode>& node)
     {
-        Expects(node->getInterface<IDocumentNodeRenderer>().has_value());
-        return gsl::not_null{&node->getInterface<IDocumentNodeRenderer>().value()};
+        Expects(node->as<IDocumentNodeRenderer>().has_value());
+        return gsl::not_null{&node->as<IDocumentNodeRenderer>().value()};
     };
     return nodes | ranges::views::transform(toRenderer) | ranges::to<std::vector>();
 }

@@ -8,7 +8,7 @@ std::vector<std::unique_ptr<IDocumentNode>> flattenNodes(std::vector<std::unique
 {
     auto flattenNodes = std::vector<std::unique_ptr<IDocumentNode>>{};
     for (auto& node : nodes) {
-        if (const auto nodeCollection = node->template getInterface<INodeCollection>())
+        if (const auto nodeCollection = node->template as<INodeCollection>())
             std::ranges::move(nodeCollection->flatten(), std::back_inserter(flattenNodes));
         else
             flattenNodes.emplace_back(std::move(node));
@@ -20,9 +20,9 @@ std::vector<std::unique_ptr<IDocumentNode>> optimizeNodes(std::vector<std::uniqu
 {
     auto processedNodes = std::vector<std::unique_ptr<IDocumentNode>>{};
     for (auto& node : nodes) {
-        if (auto text = node->getInterface<IRenderedAsStringPart>()) {
-            if (!processedNodes.empty() && processedNodes.back()->getInterface<IRenderedAsStringPart>()) {
-                auto prevText = processedNodes.back()->getInterface<IRenderedAsStringPart>()->content();
+        if (auto text = node->as<IRenderedAsStringPart>()) {
+            if (!processedNodes.empty() && processedNodes.back()->as<IRenderedAsStringPart>()) {
+                auto prevText = processedNodes.back()->as<IRenderedAsStringPart>()->content();
                 processedNodes.back() = std::make_unique<TextNode>(prevText + text->content());
             }
             else

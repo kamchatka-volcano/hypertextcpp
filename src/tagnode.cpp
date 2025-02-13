@@ -116,46 +116,22 @@ TagNode::ReadResult TagNode::readAttributes(StreamReader& stream)
     return ReadResult::Ok;
 }
 
-template<typename T>
-sfun::optional_ref<T> getIConvertibleToProcedure(auto selfPtr)
-{
-    if (std::ranges::any_of(
-                selfPtr->attributeNodes_,
-                [](const auto& node)
-                {
-                    return node->template getInterface<IAttribute>().has_value();
-                }))
-        return selfPtr;
-
-    return std::nullopt;
-}
-
-sfun::optional_ref<const IConvertibleToProcedure> TagNode::getIConvertibleToProcedure() const
-{
-    return getIConvertibleToProcedure<const IConvertibleToProcedure>(this);
-}
-
-sfun::optional_ref<IConvertibleToProcedure> TagNode::getIConvertibleToProcedure()
-{
-    return getIConvertibleToProcedure<IConvertibleToProcedure>(this);
-}
-
-std::string_view TagNode::procedureName() const
+std::optional<std::string_view> TagNode::procedureName() const
 {
     auto idAttribute = std::ranges::find_if(
             attributeNodes_,
             [](const auto& node)
             {
-                auto attribute = node->template getInterface<IAttribute>();
+                auto attribute = node->template as<IAttribute>();
                 if (!attribute.has_value())
                     return false;
                 return attribute->name() == "htcpp-id";
             });
 
     if (idAttribute == attributeNodes_.end())
-        return {};
+        return std::nullopt;
 
-    return idAttribute->get()->template getInterface<IAttribute>()->value();
+    return idAttribute->get()->template as<IAttribute>()->value();
 }
 
 std::vector<std::unique_ptr<IDocumentNode>> TagNode::flatten()
@@ -166,17 +142,17 @@ std::vector<std::unique_ptr<IDocumentNode>> TagNode::flatten()
                 std::make_unique<ControlFlowStatementNode>(ControlFlowStatementNodeType::Open, extension_.value()));
     result.emplace_back(std::make_unique<TextNode>("<" + name_));
     for (auto& node : attributeNodes_) {
-        if (node->getInterface<IAttribute>().has_value())
+        if (node->as<IAttribute>().has_value())
             continue;
 
-        if (auto nodeCollection = node->getInterface<INodeCollection>())
+        if (auto nodeCollection = node->as<INodeCollection>())
             std::ranges::move(nodeCollection->flatten(), std::back_inserter(result));
         else
             result.emplace_back(std::move(node));
     }
     result.emplace_back(std::make_unique<TextNode>(">"));
     for (auto& node : contentNodes_) {
-        if (auto nodeCollection = node->getInterface<INodeCollection>())
+        if (auto nodeCollection = node->as<INodeCollection>())
             std::ranges::move(nodeCollection->flatten(), std::back_inserter(result));
         else
             result.emplace_back(std::move(node));

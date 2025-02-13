@@ -1,6 +1,8 @@
 #pragma once
 #include "iattribute.h"
 #include "idocumentnode.h"
+#include <string>
+#include <string_view>
 
 namespace htcpp {
 
@@ -8,8 +10,6 @@ class StreamReader;
 
 class AttributeNode : public IDocumentNode,
                       public IAttribute {
-    DOCUMENT_NODE_INTERFACE_ACCESS(IAttribute)
-
 public:
     explicit AttributeNode(std::string name, StreamReader& stream);
     std::string_view name() const override;
