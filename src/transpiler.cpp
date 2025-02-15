@@ -80,6 +80,11 @@ std::unordered_map<GeneratedFileType, std::string> Transpiler::process(const fs:
     for (auto& node : nodeList_)
         utils::replaceElementsWithIdsToProcedures(node, procedureList_);
 
+    auto nestedProcedures = std::vector<std::unique_ptr<ProcedureNode>>{};
+    for (auto& procedure : procedureList_)
+        std::ranges::move(procedure->takeContentProcedures(), std::back_inserter(nestedProcedures));
+    std::ranges::move(nestedProcedures, std::back_inserter(procedureList_));
+
     return renderer_.get().generateCode(
             nodesToNodeRenderers(globalStatementList_),
             procedureList_,

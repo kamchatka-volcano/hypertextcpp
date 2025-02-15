@@ -1,7 +1,8 @@
 #pragma once
+#include "idocumentnode.h"
 #include <sfun/interface.h>
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace htcpp{
 

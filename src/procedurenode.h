@@ -14,6 +14,7 @@ public:
     ProcedureNode(std::string procedureName, StreamReader& stream);
     ProcedureNode(std::string procedureName, std::unique_ptr<IDocumentNode> contentNode);
     const std::string& name() const;
+    std::vector<std::unique_ptr<ProcedureNode>> takeContentProcedures();
 
     std::string renderingCode() const override;
 
@@ -23,6 +24,7 @@ private:
 private:
     std::string procedureName_;
     std::vector<std::unique_ptr<IDocumentNode>> contentNodes_;
+    std::vector<std::unique_ptr<ProcedureNode>> contentProcedures_;
 };
 
 } //namespace htcpp

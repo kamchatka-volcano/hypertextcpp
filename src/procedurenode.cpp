@@ -30,6 +30,11 @@ const std::string& ProcedureNode::name() const
     return procedureName_;
 }
 
+std::vector<std::unique_ptr<ProcedureNode>> ProcedureNode::takeContentProcedures()
+{
+    return std::move(contentProcedures_);
+}
+
 void ProcedureNode::load(StreamReader& stream)
 {
     auto nodePos = stream.position();
@@ -41,6 +46,10 @@ void ProcedureNode::load(StreamReader& stream)
         if (stream.peek() == "}"){
             stream.skip(1);
             utils::consumeReadText(readText, contentNodes_);
+
+            for (auto& node : contentNodes_)
+                utils::replaceElementsWithIdsToProcedures(node, contentProcedures_);
+
             contentNodes_ = optimizeNodes(flattenNodes(std::move(contentNodes_)));
             return;
         }
